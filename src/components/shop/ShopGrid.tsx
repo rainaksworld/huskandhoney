@@ -25,8 +25,10 @@ export function ShopGrid({ cards }: { cards: CardData[] }) {
   const before = useRef<Map<string, DOMRect> | null>(null);
 
   // Read ?c= and the remembered layout after mount (keeps the page static).
+  // One-time hydration from the URL + localStorage; not a sync loop.
   useEffect(() => {
     const c = new URLSearchParams(location.search).get("c");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (c === "coffee" || c === "kits" || c === "equipment") setFilter(c);
     try {
       const l = localStorage.getItem("hh_layout");

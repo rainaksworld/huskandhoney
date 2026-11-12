@@ -11,10 +11,10 @@ export function PourHero() {
   var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
   var track=$('#top'),kettle=$('#kettle'),stream=$('#stream'),streamHi=$('#streamHi'),surf=$('#surf'),crema=$('#crema'),rips=$$('.rg'),steam=$('#steam'),hint=$('#hint'),pctEl=$('#pct'),foam=$('#foam'),splash=$('#splash'),drops=splash.children,sheen=$('#sheen');
   var cur=0,target=0,busy=false,SS={s:0,tx:0,ty:0,cy:494,ptx:0,vx:0},CX=250,KS=.88,TIPX=-298.0,TIPY=-79.0;
-  function c(v){return v<0?0:v>1?1:v}
-  function ease(t){return t*t*(3-2*t)}
-  function lerp(a,b,t){return a+(b-a)*t}
-  function drawStream(t){
+  function c(v:any){return v<0?0:v>1?1:v}
+  function ease(t:any){return t*t*(3-2*t)}
+  function lerp(a:any,b:any,t:any){return a+(b-a)*t}
+  function drawStream(t:any){
     var s=SS.s;
     if(s<.01){stream.style.opacity=0;streamHi.style.opacity=0;foam.setAttribute('opacity',0);splash.style.opacity=0;return}
     var x0=SS.tx,y0=SS.ty,x3=CX-1,y3=SS.cy,x1=x0-6,y1=y0+34,x2=CX,y2=y3-120,N=30,L=[],R=[],C=[];
@@ -40,7 +40,7 @@ export function PourHero() {
       drops[k].setAttribute('cx',(CX+vx*tau).toFixed(1));drops[k].setAttribute('cy',(SS.cy-(vy*tau-150*tau*tau)).toFixed(1));drops[k].setAttribute('opacity',(.9*(1-ph)).toFixed(2));
     }
   }
-  function apply(p,t,dt){
+  function apply(p:any,t:any,dt:any){
     var m=ease(c((p-.03)/.2))*(1-ease(c((p-.92)/.07)));
     var tilt=-35*m,px=lerp(528,508,m),py=lerp(236,138,m);
     kettle.setAttribute('transform','translate('+px.toFixed(1)+' '+py.toFixed(1)+') rotate('+tilt.toFixed(2)+') scale('+KS+')');
@@ -62,7 +62,7 @@ export function PourHero() {
   }
   function targetP(){var r=track.getBoundingClientRect(),tot=r.height-2*window.innerHeight;return tot>0?c(-r.top/tot):0}
   var last=0,vis=true,tgtDirty=true,alive=true;
-  function pourTick(now){
+  function pourTick(now:any){
     var dt=last?Math.min(.05,(now-last)/1000):.016;last=now;
     if(tgtDirty){target=targetP();tgtDirty=false}
     var d=target-cur;
@@ -77,7 +77,7 @@ export function PourHero() {
   }
   function wake(){tgtDirty=true;if(!busy){busy=true;last=0;requestAnimationFrame(pourTick)}}
   function onPour(){wake()}
-  var io:IntersectionObserver|null=null;if('IntersectionObserver' in window){io=new IntersectionObserver(function(es){vis=es[0].isIntersecting;if(vis)wake()},{rootMargin:'100px'}).observe(track)}
+  var io:IntersectionObserver|null=null;if('IntersectionObserver' in window){io=new IntersectionObserver(function(es){vis=es[0].isIntersecting;if(vis)wake()},{rootMargin:'100px'});io.observe(track)}
   window.addEventListener('scroll',onPour,{passive:true});window.addEventListener('resize',onPour);onPour();
   return function(){alive=false;window.removeEventListener('scroll',onPour);window.removeEventListener('resize',onPour);io&&io.disconnect()};
 

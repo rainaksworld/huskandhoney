@@ -28,6 +28,8 @@ export function Header() {
     return () => window.removeEventListener("scroll", on);
   }, []);
 
+  // Close the mobile menu on navigation.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setMenuOpen(false), [pathname]);
 
   return (

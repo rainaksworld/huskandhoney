@@ -54,7 +54,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [toastOn, setToastOn] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // One-time hydration from localStorage (bag didn't exist during SSR); not a sync loop.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setBag(readBag());
     setReady(true);
     const onStorage = (e: StorageEvent) => e.key === KEY && setBag(readBag());

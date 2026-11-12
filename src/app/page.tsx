@@ -24,7 +24,7 @@ export default function Home() {
 <section className="sec" id="range" aria-labelledby="range-h">
   <div className="range-head rv">
     <div className="col"><p className="lab dim">Shop by category</p><h2 className="disp h2" id="range-h">what are you after?</h2></div>
-    <p className="range-help">Not sure where to start? <Link href="/find">Answer 3 questions and we'll pick your coffee →</Link></p>
+    <p className="range-help">Not sure where to start? <Link href="/find">Answer 3 questions and we&apos;ll pick your coffee →</Link></p>
   </div>
   <div className="cats">
     <Link className="cat k-blue rv" href="/shop?c=coffee"><svg className="art" viewBox="0 0 240 190" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{__html:"<path d=\"M78 34h84l10 20v104a8 8 0 0 1-8 8H76a8 8 0 0 1-8-8V54z\" fill=\"rgba(255,255,255,.35)\"/><path d=\"M68 54h104M96 34v-8h48v8\"/><circle cx=\"120\" cy=\"104\" r=\"20\"/><path d=\"M110 96c8 6 12 10 20 16\" />"}} /><span className="for">Already brewing at home</span><p className="lab">Coffee</p><h3 className="disp">beans and grounds.</h3><p>Arabica 01 and Arabica 02, packed for how you brew.</p><ul className="facts"><li>2 estates</li><li>3 roasts</li><li>5 grinds</li><li>250 g or 500 g</li></ul><span className="pfrom">From {formatINR(COFFEE_PRICE["250"])}</span><span className="go">Shop coffee <i aria-hidden="true">→</i></span></Link>

@@ -37,6 +37,7 @@ export function CoffeeBuy({ coffee }: { coffee: Coffee }) {
   const firstPaint = useRef(true);
 
   // Pre-select from ?roast=&grind=&size= (quiz links) or the last choice.
+  // One-time hydration from client-only sources (URL + localStorage); not a sync loop.
   useEffect(() => {
     let last: Record<string, string> = {};
     try {
@@ -46,6 +47,7 @@ export function CoffeeBuy({ coffee }: { coffee: Coffee }) {
     const r = q.get("roast") ?? last.roast;
     const g = q.get("grind") ?? last.grind;
     const s = q.get("size") ?? last.size;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (r && (ROASTS as readonly string[]).includes(r)) setRoast(r as Roast);
     if (g && (GRINDS as readonly string[]).includes(g)) setGrind(g as Grind);
     if (s && (SIZES as readonly string[]).includes(s)) setSize(s as Size);
