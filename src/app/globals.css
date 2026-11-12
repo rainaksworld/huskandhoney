@@ -1,26 +1,20 @@
 @import "tailwindcss";
+@import "../styles/brand.css";
 
+/* Brand fonts come from next/font (self-hosted). */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --f-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --f-ui: var(--font-montserrat), "Helvetica Neue", Arial, sans-serif;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  --color-foam: #f6eedf;
+  --color-cream: #f1e4d3;
+  --color-honey: #f0e2b3;
+  --color-blue: #678bc7;
+  --color-olive: #4b682f;
+  --color-navy: #0f1a2e;
+  --color-ink: #1e2a15;
+  --font-display: var(--f-display);
+  --font-ui: var(--f-ui);
 }
