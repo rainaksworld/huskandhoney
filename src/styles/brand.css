@@ -609,21 +609,21 @@ body.has-addbar .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 .shop-bar{display:flex;justify-content:space-between;align-items:center;gap:12px 24px;flex-wrap:wrap}
 .shop-bar .layout{margin-left:auto}
 #grid[data-layout="showcase"]{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-flow:dense;gap:16px}
-#grid[data-layout="showcase"] .pcard.feat{grid-column:span 2}
-#grid[data-layout="showcase"] .pcard.feat h3{font-size:clamp(30px,3vw,44px)}
-#grid[data-layout="showcase"] .pcard.feat p{font-size:16px}
-#grid[data-layout="showcase"] .pcard:not(.feat) .pt{padding:12px 14px 16px}
-#grid[data-layout="showcase"] .pcard:not(.feat) h3{font-size:clamp(20px,1.8vw,26px)}
-#grid[data-layout="showcase"] .pcard:not(.feat) p{display:none}
+#grid[data-layout="showcase"] .cell.feat{grid-column:span 2}
+#grid[data-layout="showcase"] .feat .pcard h3{font-size:clamp(30px,3vw,44px)}
+#grid[data-layout="showcase"] .feat .pcard p{font-size:16px}
+#grid[data-layout="showcase"] .cell:not(.feat) .pcard .pt{padding:12px 14px 16px}
+#grid[data-layout="showcase"] .cell:not(.feat) .pcard h3{font-size:clamp(20px,1.8vw,26px)}
+#grid[data-layout="showcase"] .cell:not(.feat) .pcard p{display:none}
 #grid[data-layout="list"]{display:flex;flex-direction:column;gap:0}
 #grid[data-layout="list"] .pcard{flex-direction:row;align-items:stretch;border:0;border-top:1px dashed var(--line);border-radius:0;background:transparent}
-#grid[data-layout="list"] .pcard:last-child{border-bottom:1px dashed var(--line)}
+#grid[data-layout="list"] .cell:last-of-type .pcard{border-bottom:1px dashed var(--line)}
 #grid[data-layout="list"] .pcard .tile{width:clamp(130px,22vw,260px);flex:none}
 #grid[data-layout="list"] .pt{flex:1;justify-content:center;padding:16px clamp(16px,3vw,40px)}
 #grid[data-layout="list"] .pcard h3{font-size:clamp(24px,2.6vw,38px)}
 @media (hover:hover){#grid[data-layout="list"] .pcard:hover{transform:translateX(8px);box-shadow:none}}
-@media (max-width:1000px){#grid[data-layout="showcase"]{grid-template-columns:repeat(2,minmax(0,1fr))}#grid[data-layout="showcase"] .pcard.feat{grid-column:span 1}}
-@media (max-width:560px){#grid[data-layout="list"] .pcard .tile{width:110px}#grid[data-layout="list"] .pcard p{display:none}#grid[data-layout="showcase"] .pcard:not(.feat) .pt{padding:10px 12px 14px}}
+@media (max-width:1000px){#grid[data-layout="showcase"]{grid-template-columns:repeat(2,minmax(0,1fr))}#grid[data-layout="showcase"] .cell.feat{grid-column:span 1}}
+@media (max-width:560px){#grid[data-layout="list"] .pcard .tile{width:110px}#grid[data-layout="list"] .pcard p{display:none}#grid[data-layout="showcase"] .cell:not(.feat) .pcard .pt{padding:10px 12px 14px}}
 
 /* --- animated logo (from the loading animation) --- */
 .hero-logo,.nav-logo,.pill .logo{-webkit-mask:none;mask:none;background:url("/assets/logo-anim.webp") center/contain no-repeat;aspect-ratio:320/207}
@@ -700,3 +700,13 @@ html.zoomed{overflow:hidden}
 .cupcard .result{grid-template-columns:1fr;background:var(--bg);padding:clamp(18px,2vw,26px);gap:16px}
 @media (max-width:1000px){.find-grid{grid-template-columns:1fr}.find-right{position:static}.cupart{width:min(100%,300px)}}
 @media (prefers-reduced-motion:reduce){.cupart .pstream,.cupart .pplg,.cupart .pwisp{animation:none}.cupart .brewer{transition:none}}
+
+/* --- React port: each card sits in a .cell wrapper (grid item) --- */
+.shop-grid>.cell{display:flex;min-width:0}
+.shop-grid>.cell[hidden]{display:none}
+.shop-grid>.cell>.pcard{flex:1;min-width:0}
+.pcard .tag.soon{border-style:dashed}
+.zoom-in .tile{width:min(92vw,720px);border-radius:12px;overflow:hidden;background:#E9DDC4}
+.zoom-in .tile.olive{background:#4B682F}.zoom-in .tile.blue{background:#678BC7}
+.zoom-in .tile svg{width:100%;height:auto;max-height:none;border-radius:0}
+@media (max-width:700px){.zoom-in .tile{width:680px;border-radius:0}}
