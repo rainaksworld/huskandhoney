@@ -5,6 +5,7 @@ import { connection } from "next/server";
 import { orderNumber } from "@/server/orders";
 import { getOrderForBuyer } from "@/server/orders";
 import { formatINR } from "@/lib/catalogue";
+import { STATUS_LABEL } from "@/lib/order-status";
 
 export const metadata: Metadata = { title: "Your order" };
 
@@ -13,16 +14,6 @@ export const metadata: Metadata = { title: "Your order" };
 // instead of streaming a fallback, which avoids wrapping the shared Header
 // in a global <Suspense> just for this one page.
 export const instant = false;
-
-const STATUS_LABEL: Record<string, string> = {
-  pending_payment: "Payment pending",
-  paid: "Paid",
-  payment_failed: "Payment failed",
-  packed: "Packed",
-  shipped: "Shipped",
-  delivered: "Delivered",
-  cancelled: "Cancelled",
-};
 
 export default async function OrderPage({
   params,

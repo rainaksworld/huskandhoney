@@ -65,15 +65,18 @@ export function Enhancements() {
 
   useEffect(() => {
     const boot = document.querySelector<HTMLElement>(".boot");
-    if (!boot || document.documentElement.classList.contains("hh-seen")) {
-      boot?.remove();
+    if (!boot) return;
+    // Hide with CSS only (never detach the node): it's rendered by a React
+    // server component, so removing it from the DOM out-of-band would leave
+    // React's tree out of sync with the live DOM, which can surface as an
+    // unrelated insertBefore/removeChild error the next time React needs to
+    // reconcile a sibling (e.g. a route transition).
+    if (document.documentElement.classList.contains("hh-seen")) {
+      boot.classList.add("out");
       return;
     }
     const start = performance.now();
-    const hide = () => {
-      boot.classList.add("out");
-      setTimeout(() => boot.remove(), 600);
-    };
+    const hide = () => boot.classList.add("out");
     const later = () => setTimeout(hide, Math.max(0, 1600 - (performance.now() - start)));
     if (document.readyState === "complete") later();
     else window.addEventListener("load", later, { once: true });

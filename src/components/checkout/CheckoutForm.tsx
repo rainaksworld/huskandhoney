@@ -14,14 +14,20 @@ declare global {
   }
 }
 
-const FIELDS: { name: keyof Omit<CheckoutInput, "items" | "note">; label: string; type?: string; full?: boolean }[] = [
-  { name: "name", label: "Full name", full: true },
-  { name: "email", label: "Email", type: "email" },
-  { name: "phone", label: "Phone", type: "tel" },
-  { name: "address", label: "Street address", full: true },
-  { name: "city", label: "City" },
-  { name: "state", label: "State" },
-  { name: "pincode", label: "Pincode" },
+const FIELDS: {
+  name: keyof Omit<CheckoutInput, "items" | "note">;
+  label: string;
+  type?: string;
+  full?: boolean;
+  autoComplete?: string;
+}[] = [
+  { name: "name", label: "Full name", full: true, autoComplete: "name" },
+  { name: "email", label: "Email", type: "email", autoComplete: "email" },
+  { name: "phone", label: "Phone", type: "tel", autoComplete: "tel" },
+  { name: "address", label: "Street address", full: true, autoComplete: "street-address" },
+  { name: "city", label: "City", autoComplete: "address-level2" },
+  { name: "state", label: "State", autoComplete: "address-level1" },
+  { name: "pincode", label: "Pincode", autoComplete: "postal-code" },
 ];
 
 let razorpayScript: Promise<void> | null = null;
@@ -166,10 +172,12 @@ export function CheckoutForm() {
             <label key={f.name} className={f.full ? "full" : undefined}>
               {f.label}
               <input
+                name={f.name}
                 type={f.type ?? "text"}
                 value={values[f.name]}
                 onChange={(e) => set(f.name, e.target.value)}
                 required
+                autoComplete={f.autoComplete}
                 aria-invalid={Boolean(fieldErrors[f.name])}
               />
               {fieldErrors[f.name] && <span className="field-err">{fieldErrors[f.name]}</span>}
@@ -178,6 +186,7 @@ export function CheckoutForm() {
           <label className="full">
             Note for delivery (optional)
             <textarea
+              name="note"
               rows={2}
               value={values.note}
               onChange={(e) => set("note", e.target.value)}

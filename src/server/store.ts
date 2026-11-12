@@ -1,6 +1,6 @@
 import "server-only";
 import { inArray, sql } from "drizzle-orm";
-import { cacheLife, cacheTag } from "next/cache";
+import { cacheLife, cacheTag, updateTag } from "next/cache";
 import { z } from "zod";
 import { getDb, schema } from "./db";
 
@@ -47,6 +47,7 @@ export async function saveSettings(next: Settings) {
       .values({ key, value })
       .onConflictDoUpdate({ target: schema.settings.key, set: { value, updatedAt: sql`now()` } });
   }
+  updateTag("settings");
 }
 
 /** Shipping in rupees for a subtotal in rupees. */
@@ -74,10 +75,11 @@ export async function setStock(key: string, qty: number | null) {
   const db = await getDb();
   if (qty === null) {
     await db.delete(schema.stock).where(inArray(schema.stock.key, [key]));
-    return;
+  } else {
+    await db
+      .insert(schema.stock)
+      .values({ key, qty })
+      .onConflictDoUpdate({ target: schema.stock.key, set: { qty, updatedAt: sql`now()` } });
   }
-  await db
-    .insert(schema.stock)
-    .values({ key, qty })
-    .onConflictDoUpdate({ target: schema.stock.key, set: { qty, updatedAt: sql`now()` } });
+  updateTag("stock");
 }
