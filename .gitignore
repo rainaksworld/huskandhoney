@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# local PGlite dev database (dev/test only; real deploys use DATABASE_URL)
+/.data/
+
 # production
 /build
 
