@@ -1,0 +1,3 @@
+huskandhoney.in, www.huskandhoney.in {
+	reverse_proxy app:3000
+}
