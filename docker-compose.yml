@@ -1,0 +1,38 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: husk
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: husk_and_honey
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U husk -d husk_and_honey"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://husk:${POSTGRES_PASSWORD}@db:5432/husk_and_honey
+      SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET in .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:?set RAZORPAY_KEY_ID in .env}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET:?set RAZORPAY_KEY_SECRET in .env}
+      RAZORPAY_WEBHOOK_SECRET: ${RAZORPAY_WEBHOOK_SECRET:-}
+      SITE_URL: ${SITE_URL:?set SITE_URL in .env, e.g. https://huskandhoney.in}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      OWNER_EMAIL: ${OWNER_EMAIL:-}
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:
