@@ -22,6 +22,7 @@ export function proxy(request: NextRequest) {
     pathname === "/robots.txt" ||
     pathname === "/sitemap.xml" ||
     pathname.startsWith("/img") ||
+    pathname.startsWith("/assets") ||
     pathname.startsWith("/fonts");
   if (allowed) return NextResponse.next();
 
@@ -39,6 +40,18 @@ const COMING_SOON_HTML = `<!doctype html>
 <title>Husk &amp; Honey — Coming Soon</title>
 <meta name="robots" content="noindex" />
 <style>
+  @font-face {
+    font-family: "Fraunces";
+    src: url("/fonts/fraunces.woff2") format("woff2");
+    font-weight: 100 900;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Montserrat";
+    src: url("/fonts/montserrat.woff2") format("woff2");
+    font-weight: 100 900;
+    font-display: swap;
+  }
   :root { color-scheme: light; }
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; }
@@ -50,18 +63,25 @@ const COMING_SOON_HTML = `<!doctype html>
     padding: 24px;
     background: #f6eedf;
     color: #1e2a15;
-    font-family: Georgia, "Times New Roman", serif;
+    font-family: "Montserrat", Helvetica, Arial, sans-serif;
     text-align: center;
   }
   .wrap { max-width: 560px; }
+  .logo {
+    width: min(70vw, 260px);
+    height: auto;
+    margin: 0 auto 28px;
+    display: block;
+  }
   h1 {
+    font-family: "Fraunces", Georgia, "Times New Roman", serif;
     font-size: clamp(2rem, 6vw, 3rem);
+    font-weight: 600;
     margin: 0 0 16px;
-    letter-spacing: 0.02em;
-    color: #4b682f;
+    letter-spacing: 0.01em;
+    color: #0f1a2e;
   }
   p {
-    font-family: Helvetica, Arial, sans-serif;
     font-size: 1.05rem;
     line-height: 1.6;
     color: #1e2a15;
@@ -71,22 +91,23 @@ const COMING_SOON_HTML = `<!doctype html>
   .rule {
     width: 64px;
     height: 2px;
-    background: #0f1a2e;
-    opacity: 0.25;
+    background: #678bc7;
+    opacity: 0.5;
     margin: 28px auto;
   }
   .small {
-    font-family: Helvetica, Arial, sans-serif;
-    font-size: 0.85rem;
-    letter-spacing: 0.08em;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    opacity: 0.6;
+    color: #678bc7;
+    opacity: 0.9;
+    font-weight: 600;
   }
 </style>
 </head>
 <body>
   <div class="wrap">
-    <p class="small">Husk &amp; Honey</p>
+    <img class="logo" src="/assets/logo-still.png" alt="Husk & Honey" />
     <h1>Brewing something good.</h1>
     <p>Our Himalayan coffee, grown and roasted near Siliguri, is on its way online.</p>
     <div class="rule"></div>
