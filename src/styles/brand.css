@@ -600,12 +600,27 @@ body.has-addbar .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 .hv-dp{animation:dripd 1.4s ease-in infinite}.hv-dp.d2{animation-delay:-.45s}.hv-dp.d3{animation-delay:-.9s}
 .hv-plg{animation:hvPlg 1.8s ease-in-out infinite}
 @keyframes hvPlg{0%,10%{transform:translateY(0)}65%,100%{transform:translateY(26px)}}
-/* `.hv.hv-rot` (not just `.hv-rot`) so this ties `.pcard .hv`'s specificity
-   and wins on source order - otherwise `.pcard .hv`'s transform-box:fill-box
-   beats this transform-box:view-box, the rotation origin lands in the wrong
-   coordinate space, and the hand grinder's crank handle spins off-canvas. */
-.hv.hv-rot{transform-box:view-box;transform-origin:120px 48px;animation:hvRot 1.6s linear infinite}
-@keyframes hvRot{to{transform:rotate(360deg)}}
+/* The grinder's crank handle turns on a vertical shaft, so it sweeps a
+   HORIZONTAL circle - viewed from the front that reads as the handle
+   swinging side to side and foreshortening as it passes behind the shaft,
+   not as a wheel spinning in the plane of the screen. scaleX alone (no
+   rotate) gives that: 1 -> 0 -> -1 -> 0 -> 1 traces a cosine, which is
+   exactly a horizontal orbit viewed edge-on. `.hv.hv-rot` (not just
+   `.hv-rot`) ties `.pcard .hv`'s specificity and wins on source order -
+   otherwise `.pcard .hv`'s transform-box:fill-box beats this
+   transform-box:view-box and the origin lands in the wrong coordinate
+   space entirely. */
+.hv.hv-rot{transform-box:view-box;transform-origin:120px 30px;animation:hvCrank 1.6s linear infinite}
+@keyframes hvCrank{
+  0%,100%{transform:scaleX(1)}
+  12.5%{transform:scaleX(.707)}
+  25%{transform:scaleX(0)}
+  37.5%{transform:scaleX(-.707)}
+  50%{transform:scaleX(-1)}
+  62.5%{transform:scaleX(-.707)}
+  75%{transform:scaleX(0)}
+  87.5%{transform:scaleX(.707)}
+}
 .hv-press{animation:hvPress 1.4s ease-in-out infinite}
 @keyframes hvPress{50%{transform:translateY(5px)}}
 .hv-lift{animation:hvLift 1.8s ease-in-out infinite}
