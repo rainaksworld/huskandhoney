@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { listCustomers } from "@/server/orders";
+import { accountEmails, listCustomers } from "@/server/orders";
 import { formatINR } from "@/lib/catalogue";
+import { connection } from "next/server";
 
 export const metadata: Metadata = { title: "Customers", robots: { index: false, follow: false } };
 
@@ -12,9 +13,10 @@ export default async function AdminCustomersPage({
 }: {
   searchParams: Promise<{ wa?: string }>;
 }) {
+  await connection(); // live data only, never at build time (the layout's own connection() doesn't hold the page back)
   const { wa } = await searchParams;
   const onlyWa = wa === "1";
-  const all = await listCustomers();
+  const [all, accounts] = await Promise.all([listCustomers(), accountEmails()]);
   const customers = onlyWa ? all.filter((c) => c.whatsappOptIn) : all;
   const optedIn = all.filter((c) => c.whatsappOptIn).length;
 
@@ -57,6 +59,7 @@ export default async function AdminCustomersPage({
                 <th>Spent</th>
                 <th>Last order</th>
                 <th>WhatsApp</th>
+                <th>Account</th>
               </tr>
             </thead>
             <tbody>
@@ -73,6 +76,7 @@ export default async function AdminCustomersPage({
                   <td>{formatINR(c.spent / 100)}</td>
                   <td>{fmtDate(c.lastOrder)}</td>
                   <td>{c.whatsappOptIn ? "Yes" : "—"}</td>
+                  <td>{accounts.has(c.email) ? "Yes" : "Guest"}</td>
                 </tr>
               ))}
             </tbody>

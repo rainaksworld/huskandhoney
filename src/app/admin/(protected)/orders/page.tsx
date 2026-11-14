@@ -3,10 +3,12 @@ import Link from "next/link";
 import { listOrders, orderNumber } from "@/server/orders";
 import { formatINR } from "@/lib/catalogue";
 import { STATUS_LABEL } from "@/lib/order-status";
+import { connection } from "next/server";
 
 export const metadata: Metadata = { title: "Orders", robots: { index: false, follow: false } };
 
 export default async function AdminOrdersPage() {
+  await connection(); // live data only, never at build time (the layout's own connection() doesn't hold the page back)
   const orders = await listOrders();
 
   return (

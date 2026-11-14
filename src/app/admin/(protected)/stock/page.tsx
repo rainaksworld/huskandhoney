@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import { allStockKeys } from "@/lib/catalogue";
 import { getStockMap } from "@/server/store";
 import { StockForm } from "@/components/admin/StockForm";
+import { connection } from "next/server";
 
 export const metadata: Metadata = { title: "Stock", robots: { index: false, follow: false } };
 
 export default async function AdminStockPage() {
+  await connection(); // live data only, never at build time (the layout's own connection() doesn't hold the page back)
   const [keys, stock] = await Promise.all([allStockKeys(), getStockMap()]);
   const items = keys.map((k) => ({ ...k, qty: stock[k.key] ?? null }));
 

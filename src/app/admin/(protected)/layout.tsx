@@ -14,6 +14,7 @@ export const instant = false;
 const NAV = [
   { href: "/admin/orders", label: "Orders" },
   { href: "/admin/customers", label: "Customers" },
+  { href: "/admin/accounts", label: "Accounts" },
   { href: "/admin/stock", label: "Stock" },
   { href: "/admin/settings", label: "Settings" },
 ];

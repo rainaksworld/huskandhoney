@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getCheckoutPrefill } from "@/app/account/actions";
 import { useCart } from "@/components/cart/CartProvider";
 import { formatINR } from "@/lib/catalogue";
 import { beginCheckout, confirmPayment, sandboxPay } from "@/app/actions";
@@ -56,8 +57,32 @@ export function CheckoutForm() {
     pincode: "",
     note: "",
   });
-  const [whatsappOptIn, setWhatsappOptIn] = useState(false);
+  const [whatsappOptIn, setWhatsappOptIn] = useState(true);
+  const [account, setAccount] = useState<{ name: string; email: string } | null | undefined>(undefined);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  // Logged-in customers get their saved details filled in. Only empty fields
+  // are filled, so nothing typed before this arrives is overwritten.
+  useEffect(() => {
+    let live = true;
+    getCheckoutPrefill()
+      .then((p) => {
+        if (!live) return;
+        setAccount(p ? { name: p.name, email: p.email } : null);
+        if (!p) return;
+        setValues((s) => {
+          const next = { ...s };
+          for (const k of ["name", "email", "phone", "address", "city", "state", "pincode"] as const)
+            if (!next[k] && p[k]) next[k] = p[k];
+          return next;
+        });
+        setWhatsappOptIn(p.whatsappOptIn);
+      })
+      .catch(() => live && setAccount(null));
+    return () => {
+      live = false;
+    };
+  }, []);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -167,6 +192,13 @@ export function CheckoutForm() {
         <h1 className="disp h2" id="co-h">
           delivery details.
         </h1>
+        {account === null && (
+          <p className="lead co-acct">
+            Have an account? <Link href="/login?next=/checkout">Log in</Link> to fill this in for you. Or just carry on
+            as a guest.
+          </p>
+        )}
+        {account && <p className="lead co-acct">Logged in as {account.email}. Your saved details are filled in below.</p>}
       </div>
       <div className="checkout-grid">
         <form className="order-form" onSubmit={onSubmit} noValidate>

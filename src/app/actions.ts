@@ -12,6 +12,7 @@ import {
 } from "@/server/orders";
 import { activeProvider, sandboxSign, verifyCheckoutSignature } from "@/server/payments";
 import { notifyOrderPaid } from "@/server/notify";
+import { getCurrentUser } from "@/server/accounts";
 import { eq } from "drizzle-orm";
 import { updateTag } from "next/cache";
 import { getCoffee, getEquipment, getKit } from "@/lib/catalogue";
@@ -91,7 +92,8 @@ export async function sendMessage(_: FormResult | null, form: FormData): Promise
 export async function beginCheckout(input: unknown): Promise<StartedCheckout> {
   if (!(await allow("checkout", 12, 10 * 60_000)))
     return { ok: false, error: "Too many attempts. Please wait a few minutes." };
-  return startCheckout(input);
+  const user = await getCurrentUser();
+  return startCheckout(input, user?.id ?? null);
 }
 
 export type ConfirmResult =

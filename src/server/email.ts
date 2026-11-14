@@ -16,6 +16,8 @@ export async function sendMail(mail: Mail) {
   const from = process.env.MAIL_FROM;
   if (!key || !from) {
     console.info(`[mail:not-sent] to=${mail.to} subject="${mail.subject}"`);
+    // Local development only: show the body so links (verify, reset) can be followed.
+    if (process.env.NODE_ENV !== "production") console.info(mail.text);
     return { sent: false as const };
   }
   try {
@@ -104,6 +106,62 @@ export async function sendOrderEmails(o: OrderLike, items: ItemLike[]) {
       replyTo: o.email,
     });
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* Account emails                                                       */
+/* ------------------------------------------------------------------ */
+
+type AccountLike = { name: string; email: string };
+
+export async function sendWelcomeEmail(u: AccountLike, verifyToken: string) {
+  const site = process.env.SITE_URL ?? "";
+  return sendMail({
+    to: u.email,
+    subject: "Welcome to Husk & Honey - please confirm your email",
+    text: [
+      `Hi ${u.name.split(" ")[0]},`,
+      "Thanks for creating a Husk & Honey account. Please confirm this is your email address:",
+      `${site}/verify-email?t=${verifyToken}`,
+      "Confirming lets us show any earlier orders you placed with this email in your account. The link works for 7 days.",
+      "If you didn't create this account, you can ignore this email.",
+      "Husk & Honey, Siliguri",
+    ].join("\n\n"),
+    replyTo: process.env.OWNER_EMAIL,
+  });
+}
+
+export async function sendVerifyEmail(u: AccountLike, verifyToken: string) {
+  const site = process.env.SITE_URL ?? "";
+  return sendMail({
+    to: u.email,
+    subject: "Confirm your Husk & Honey email",
+    text: [
+      `Hi ${u.name.split(" ")[0]},`,
+      "Please confirm your email address:",
+      `${site}/verify-email?t=${verifyToken}`,
+      "The link works for 7 days.",
+      "Husk & Honey, Siliguri",
+    ].join("\n\n"),
+    replyTo: process.env.OWNER_EMAIL,
+  });
+}
+
+export async function sendPasswordResetEmail(u: AccountLike, resetToken: string) {
+  const site = process.env.SITE_URL ?? "";
+  return sendMail({
+    to: u.email,
+    subject: "Reset your Husk & Honey password",
+    text: [
+      `Hi ${u.name.split(" ")[0]},`,
+      "Someone asked to reset the password for your Husk & Honey account. To choose a new one:",
+      `${site}/reset-password?t=${resetToken}`,
+      "The link works for 1 hour and only once.",
+      "If this wasn't you, ignore this email - your password stays the same.",
+      "Husk & Honey, Siliguri",
+    ].join("\n\n"),
+    replyTo: process.env.OWNER_EMAIL,
+  });
 }
 
 /** A logistics update (packed/shipped/delivered/cancelled) after the order's own confirmation email. */

@@ -26,6 +26,7 @@ export const MENU = [
   ...NAV,
   { href: "/faq", label: "FAQ" },
   { href: "/contact", label: "Contact" },
+  { href: "/account", label: "Your account" },
 ];
 
 export const FOOTER_NAV = [

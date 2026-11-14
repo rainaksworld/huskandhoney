@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { eq, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
+import { refresh } from "next/cache";
 import { getDb, schema } from "@/server/db";
 import { allow, checkAdminPassword, endAdminSession, isAdmin, startAdminSession } from "@/server/security";
 import { ORDER_STATUSES_LIST } from "@/lib/order-status";
@@ -72,6 +73,8 @@ export async function updateOrder(_: FormResult | null, form: FormData): Promise
 
   // Only tell the buyer when the status really moved - re-saving the same
   // status (e.g. to fix a typo in the tracking note) shouldn't re-notify.
+  // Re-render the order page so the WhatsApp message below the form matches the new status.
+  refresh();
   if (updated && updated.status !== before.status) {
     const sent = await notifyOrderStatus(updated);
     if (sent.length) return { ok: true, message: `Order updated. Customer notified by ${sent.join(" and ")}.` };

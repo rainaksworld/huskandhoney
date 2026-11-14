@@ -279,6 +279,7 @@ input[type=range]{width:100%;accent-color:var(--blue);background:transparent}
 @media (max-width:1000px){
   .nav-links{display:none}
   .menu-btn{display:inline-flex}
+  .acct-btn{display:none}
   .side{display:none !important}
   .reveal{grid-template-columns:1fr;gap:28px}
   .reveal .stage{order:-1}
@@ -501,6 +502,44 @@ body.has-addbar .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 .order-form label.chk input{width:auto;flex:none;border:0;padding:0;accent-color:var(--accent)}
 .order-form label.chk span{font-size:14px}
 .field-err{font:500 11px/1.3 var(--f-ui);color:#B42318}
+
+/* admin: free click-to-chat WhatsApp */
+.wa-send{display:flex;flex-direction:column;align-items:flex-start;gap:10px;max-width:520px}
+.wa-preview{white-space:pre-line;margin:0;padding:14px 16px;border-radius:4px 16px 16px 16px;background:#DCF2C9;color:#1E2A15;font:500 14px/1.45 var(--f-ui)}
+
+/* customer accounts */
+.auth-form{max-width:420px}
+.auth-form .legal a,.acct a{color:inherit}
+.field-hint{font:500 11px/1.3 var(--f-ui);color:var(--dim)}
+.ok-msg{color:#3F5A26}
+.pw-wrap{position:relative;display:flex;flex-direction:column}
+.pw-wrap .pw-toggle{position:absolute;right:0;top:26px;background:none;border:0;padding:8px 0 8px 12px;font:600 11px/1 var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);cursor:pointer}
+.pw-wrap input{padding-right:56px}
+.co-acct{margin-top:8px;font-size:clamp(15px,1.3vw,17px)}
+.co-acct a{color:inherit}
+.acct{display:flex;flex-direction:column;gap:clamp(28px,3.4vw,44px)}
+.acct-head{display:flex;flex-direction:row;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.acct-head .lead{margin:6px 0 0}
+.acct-note{display:flex;flex-direction:column;align-items:flex-start;gap:12px;max-width:640px;padding:18px 20px;border:1px solid var(--line);border-radius:16px;background:var(--surface);margin:0}
+.acct-note p{margin:0}
+.acct-sec{display:flex;flex-direction:column;gap:12px;max-width:760px;padding-top:24px;border-top:1px dashed var(--line)}
+.acct-sec h2{margin:0}
+.acct-sec>.legal{margin:0}
+.acct-orders{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.acct-orders a{display:grid;grid-template-columns:110px 1fr auto 90px;align-items:center;gap:12px;padding:14px 4px;border-bottom:1px solid var(--line);text-decoration:none;font:500 14px/1.3 var(--f-ui);transition:background .2s}
+.acct-orders a:hover{background:var(--surface)}
+.ao-num{font-weight:600}
+.ao-date{color:var(--dim)}
+.ao-total{text-align:right}
+.acct-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 20px}
+.acct-grid label.full,.acct-grid button,.acct-grid .legal,.acct-grid .stock{grid-column:1/-1}
+.acct-grid button{justify-self:start}
+@media (max-width:560px){
+  .acct-grid{grid-template-columns:1fr}
+  .acct-orders a{grid-template-columns:1fr auto;row-gap:6px}
+  .ao-date{grid-row:2}
+  .ao-total{grid-row:2;grid-column:2}
+}
 .checkout-grid .cart-sum{background:var(--surface);border-radius:var(--r);padding:clamp(18px,2.4vw,28px)}
 .checkout-grid .c-list{list-style:none;margin:0 0 4px;padding:0;display:flex;flex-direction:column;gap:10px}
 .checkout-grid .c-list .row{align-items:flex-start;border-top:1px dashed var(--line);padding-top:10px}

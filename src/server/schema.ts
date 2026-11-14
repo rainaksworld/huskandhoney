@@ -24,6 +24,54 @@ export const settings = pgTable("settings", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+/**
+ * Customer accounts. Checkout still works without one; an account adds
+ * saved details, order history and preferences. Email is stored lowercased.
+ */
+export const users = pgTable(
+  "users",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    email: text("email").notNull(),
+    name: text("name").notNull(),
+    phone: text("phone").notNull().default(""),
+    address: text("address").notNull().default(""),
+    city: text("city").notNull().default(""),
+    state: text("state").notNull().default(""),
+    pincode: text("pincode").notNull().default(""),
+    /** scrypt$<salt>$<hash>, see src/server/accounts.ts */
+    passwordHash: text("password_hash").notNull(),
+    emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
+    whatsappOptIn: boolean("whatsapp_opt_in").notNull().default(true),
+    lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("users_email").on(t.email)],
+);
+
+/** Logged-in sessions. Only a hash of the cookie token is stored. */
+export const sessions = pgTable("sessions", {
+  id: text("id").primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** One-time links for verifying an email or resetting a password. Hash only. */
+export const authTokens = pgTable("auth_tokens", {
+  id: text("id").primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  kind: text("kind").$type<"verify" | "reset">().notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  usedAt: timestamp("used_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const ORDER_STATUSES = [
   "pending_payment",
   "paid",
@@ -63,6 +111,8 @@ export const orders = pgTable(
     trackingNote: text("tracking_note"),
     /** Buyer opted in to WhatsApp order updates and offers at checkout. */
     whatsappOptIn: boolean("whatsapp_opt_in").notNull().default(false),
+    /** Set when the buyer was logged in at checkout. Guest orders stay null. */
+    userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
     paidAt: timestamp("paid_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

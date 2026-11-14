@@ -36,6 +36,50 @@ export type WaEvent =
 
 type WaMessage = { to: string; event: WaEvent; values: Record<string, string> };
 
+/* ------------------------------------------------------------------ */
+/* Free route: click-to-chat                                            */
+/* ------------------------------------------------------------------ */
+
+type ChatOrder = {
+  name: string;
+  phone: string;
+  seq: number;
+  total: number;
+  status: string;
+  trackingNote: string | null;
+};
+
+/**
+ * The message a customer should get for an order's current status, or null
+ * when there's nothing to tell them. Used for the free "Send on WhatsApp"
+ * button in /admin, which opens the owner's own WhatsApp (Business app or
+ * web) with this text ready - the owner just presses send. No API, no cost.
+ */
+export function whatsappStatusText(o: ChatOrder, orderNo: string, totalText: string) {
+  const hi = `Hi ${o.name.split(" ")[0]},`;
+  const note = o.trackingNote ? `\n\n${o.trackingNote}` : "";
+  const sign = "\n\n- Husk & Honey";
+  switch (o.status) {
+    case "paid":
+      return `${hi} thank you for your order ${orderNo} (${totalText})! We've received your payment and will let you know as soon as it's packed.${sign}`;
+    case "packed":
+      return `${hi} your Husk & Honey order ${orderNo} is packed and will be on its way soon.${note}${sign}`;
+    case "shipped":
+      return `${hi} good news - your order ${orderNo} is on its way!${note}${sign}`;
+    case "delivered":
+      return `${hi} your order ${orderNo} has been delivered. Enjoy your coffee! If anything isn't right, just reply here.${sign}`;
+    case "cancelled":
+      return `${hi} your order ${orderNo} has been cancelled.${note}\n\nIf you have any questions, just reply here.${sign}`;
+    default:
+      return null;
+  }
+}
+
+/** A wa.me link that opens WhatsApp to this number with the text filled in. */
+export function whatsappLink(phone: string, text: string) {
+  return `https://wa.me/${waNumber(phone)}?text=${encodeURIComponent(text)}`;
+}
+
 /** Indian mobile numbers are stored as 10 digits or +91XXXXXXXXXX; providers want 91XXXXXXXXXX. */
 export function waNumber(phone: string) {
   const digits = phone.replace(/\D/g, "");

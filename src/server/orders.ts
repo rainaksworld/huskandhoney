@@ -104,7 +104,7 @@ export type StartedCheckout =
     }
   | { ok: false; error: string; fieldErrors?: Record<string, string>; problems?: Quote["problems"] };
 
-export async function startCheckout(raw: unknown): Promise<StartedCheckout> {
+export async function startCheckout(raw: unknown, userId: string | null = null): Promise<StartedCheckout> {
   const provider = activeProvider();
   if (provider === "none") {
     return { ok: false, error: "Online payment isn't switched on yet. Please check back soon." };
@@ -141,6 +141,7 @@ export async function startCheckout(raw: unknown): Promise<StartedCheckout> {
       pincode: input.pincode,
       note: input.note || null,
       whatsappOptIn: input.whatsappOptIn,
+      userId,
       subtotal: quote.subtotal * 100,
       shipping: quote.shipping * 100,
       total: quote.total * 100,
@@ -158,6 +159,21 @@ export async function startCheckout(raw: unknown): Promise<StartedCheckout> {
       qty: l.qty,
     })),
   );
+
+  if (userId) {
+    // First checkout fills in the account's saved address; never overwrites one.
+    await db
+      .update(schema.users)
+      .set({
+        phone: sql`case when ${schema.users.phone} = '' then ${input.phone} else ${schema.users.phone} end`,
+        address: input.address,
+        city: input.city,
+        state: input.state,
+        pincode: input.pincode,
+        updatedAt: sql`now()`,
+      })
+      .where(and(eq(schema.users.id, userId), eq(schema.users.address, "")));
+  }
 
   const number = orderNumber(order.seq);
   let providerOrderId: string;
@@ -316,6 +332,62 @@ export async function listCustomers(): Promise<CustomerRow[]> {
     }
   }
   return [...byEmail.values()];
+}
+
+export type AccountRow = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  city: string;
+  emailVerified: boolean;
+  whatsappOptIn: boolean;
+  orders: number;
+  spent: number; // paise
+  joined: Date;
+  lastLogin: Date | null;
+};
+
+/** Every registered customer account, newest first, with their paid orders counted. */
+export async function listAccounts(): Promise<AccountRow[]> {
+  const db = await getDb();
+  const [users, paid] = await Promise.all([
+    db.select().from(schema.users).orderBy(desc(schema.users.createdAt)),
+    db
+      .select({
+        userId: schema.orders.userId,
+        email: schema.orders.email,
+        total: schema.orders.total,
+        status: schema.orders.status,
+      })
+      .from(schema.orders)
+      .where(sql`${schema.orders.paidAt} is not null`),
+  ]);
+  return users.map((u) => {
+    // Same rule as the customer's own page: guest orders under their email
+    // count only once the email is confirmed.
+    const mine = paid.filter((o) => o.userId === u.id || (u.emailVerifiedAt && o.email === u.email));
+    return {
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      phone: u.phone,
+      city: u.city,
+      emailVerified: Boolean(u.emailVerifiedAt),
+      whatsappOptIn: u.whatsappOptIn,
+      orders: mine.length,
+      spent: mine.filter((o) => o.status !== "cancelled").reduce((a, o) => a + o.total, 0),
+      joined: u.createdAt,
+      lastLogin: u.lastLoginAt,
+    };
+  });
+}
+
+/** Emails that belong to a registered account (for the customers list). */
+export async function accountEmails() {
+  const db = await getDb();
+  const rows = await db.select({ email: schema.users.email }).from(schema.users);
+  return new Set(rows.map((r) => r.email));
 }
 
 export async function getOrderAdmin(id: string) {

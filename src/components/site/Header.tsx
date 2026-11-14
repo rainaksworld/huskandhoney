@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Dialog } from "radix-ui";
 import { MENU, NAV } from "@/lib/site";
 import { useCart } from "@/components/cart/CartProvider";
+import { useTransitionMount } from "@/components/ui/useTransitionMount";
 
 function isCurrent(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
@@ -19,6 +20,8 @@ export function Header() {
   const { count, setOpen } = useCart();
   const [stuck, setStuck] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  // Mounted only while open (+ the 0.3s fade-out); see useTransitionMount for why.
+  const menu = useTransitionMount(menuOpen, 300);
   const isHome = pathname === "/";
 
   useEffect(() => {
@@ -46,6 +49,13 @@ export function Header() {
           </nav>
         </div>
         <div className="nav-r">
+          <Link
+            className="btn btn-ghost acct-btn"
+            href="/account"
+            aria-current={pathname.startsWith("/account") ? "page" : undefined}
+          >
+            Account
+          </Link>
           <button className="btn btn-ghost" id="bagBtn" type="button" aria-haspopup="dialog" onClick={() => setOpen(true)}>
             Bag (<span id="bagCount">{count}</span>)
           </button>
@@ -64,22 +74,24 @@ export function Header() {
 
       <Dialog.Root open={menuOpen} onOpenChange={setMenuOpen}>
         <Dialog.Portal forceMount>
-          <Dialog.Content
-            forceMount
-            id="menu"
-            className={`menu${menuOpen ? " open" : ""}`}
-            aria-describedby={undefined}
-          >
-            <Dialog.Title className="sr">Menu</Dialog.Title>
-            <Dialog.Close className="btn btn-ghost x" id="menuX">
-              Close
-            </Dialog.Close>
-            {MENU.map((m) => (
-              <Link key={m.href} href={m.href} onClick={() => setMenuOpen(false)}>
-                {m.label}
-              </Link>
-            ))}
-          </Dialog.Content>
+          {menu.mounted && (
+            <Dialog.Content
+              forceMount
+              id="menu"
+              className={`menu${menu.visible ? " open" : ""}`}
+              aria-describedby={undefined}
+            >
+              <Dialog.Title className="sr">Menu</Dialog.Title>
+              <Dialog.Close className="btn btn-ghost x" id="menuX">
+                Close
+              </Dialog.Close>
+              {MENU.map((m) => (
+                <Link key={m.href} href={m.href} onClick={() => setMenuOpen(false)}>
+                  {m.label}
+                </Link>
+              ))}
+            </Dialog.Content>
+          )}
         </Dialog.Portal>
       </Dialog.Root>
     </>
