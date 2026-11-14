@@ -20,6 +20,7 @@ export const CheckoutSchema = z.object({
   state: z.string().trim().min(2, "Enter your state").max(60),
   pincode: z.string().trim().regex(/^[1-9]\d{5}$/, "Enter a 6-digit pincode"),
   note: z.string().trim().max(300).optional().default(""),
+  whatsappOptIn: z.boolean().optional().default(false),
   items: z
     .array(z.object({ sku: z.string().max(80), qty: z.number().int().min(1).max(20) }))
     .min(1, "Your bag is empty")
@@ -139,6 +140,7 @@ export async function startCheckout(raw: unknown): Promise<StartedCheckout> {
       state: input.state,
       pincode: input.pincode,
       note: input.note || null,
+      whatsappOptIn: input.whatsappOptIn,
       subtotal: quote.subtotal * 100,
       shipping: quote.shipping * 100,
       total: quote.total * 100,
@@ -261,6 +263,59 @@ export async function getOrderByProviderId(providerOrderId: string) {
 export async function listOrders(limit = 200) {
   const db = await getDb();
   return db.select().from(schema.orders).orderBy(desc(schema.orders.createdAt)).limit(limit);
+}
+
+export type CustomerRow = {
+  email: string;
+  name: string;
+  phone: string;
+  city: string;
+  orders: number;
+  spent: number; // paise
+  firstOrder: Date;
+  lastOrder: Date;
+  whatsappOptIn: boolean;
+};
+
+/**
+ * Everyone who has completed a paid order, one row per email address.
+ * Name, phone and city come from their most recent order; the WhatsApp
+ * opt-in reflects their most recent choice at checkout. Unpaid and
+ * failed checkouts are left out - those people never became customers.
+ */
+export async function listCustomers(): Promise<CustomerRow[]> {
+  const db = await getDb();
+  const o = schema.orders;
+  const rows = await db
+    .select()
+    .from(o)
+    .where(sql`${o.paidAt} is not null`)
+    .orderBy(desc(o.paidAt));
+
+  const byEmail = new Map<string, CustomerRow>();
+  for (const r of rows) {
+    const at = new Date(r.paidAt!);
+    const c = byEmail.get(r.email);
+    if (!c) {
+      // Rows are newest first, so the first one seen is the latest order.
+      byEmail.set(r.email, {
+        email: r.email,
+        name: r.name,
+        phone: r.phone,
+        city: r.city,
+        orders: 1,
+        spent: r.status === "cancelled" ? 0 : r.total,
+        firstOrder: at,
+        lastOrder: at,
+        whatsappOptIn: r.whatsappOptIn,
+      });
+    } else {
+      c.orders += 1;
+      if (r.status !== "cancelled") c.spent += r.total;
+      c.firstOrder = at;
+    }
+  }
+  return [...byEmail.values()];
 }
 
 export async function getOrderAdmin(id: string) {

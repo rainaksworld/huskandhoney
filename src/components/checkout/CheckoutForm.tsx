@@ -56,6 +56,7 @@ export function CheckoutForm() {
     pincode: "",
     note: "",
   });
+  const [whatsappOptIn, setWhatsappOptIn] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -76,6 +77,7 @@ export function CheckoutForm() {
 
     const started = await beginCheckout({
       ...values,
+      whatsappOptIn,
       items: lines.map((l) => ({ sku: l.sku, qty: l.qty })),
     });
 
@@ -192,6 +194,14 @@ export function CheckoutForm() {
               onChange={(e) => set("note", e.target.value)}
               maxLength={300}
             />
+          </label>
+          <label className="full chk">
+            <input
+              type="checkbox"
+              checked={whatsappOptIn}
+              onChange={(e) => setWhatsappOptIn(e.target.checked)}
+            />
+            <span>Send order updates and offers on WhatsApp</span>
           </label>
           {error && (
             <p className="stock" role="alert">

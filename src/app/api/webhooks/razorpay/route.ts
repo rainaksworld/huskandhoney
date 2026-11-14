@@ -2,7 +2,7 @@ import { updateTag } from "next/cache";
 import { getDb, schema } from "@/server/db";
 import { verifyWebhookSignature } from "@/server/payments";
 import { markPaid } from "@/server/orders";
-import { sendOrderEmails } from "@/server/email";
+import { notifyOrderPaid } from "@/server/notify";
 import { eq } from "drizzle-orm";
 
 /**
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
     if (order && firstTime) {
       updateTag("stock");
       const items = await db.select().from(schema.orderItems).where(eq(schema.orderItems.orderId, order.id));
-      await sendOrderEmails(order, items);
+      await notifyOrderPaid(order, items);
     }
   }
 

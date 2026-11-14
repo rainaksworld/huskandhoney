@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { getDb, schema } from "@/server/db";
 import { allow, checkAdminPassword, endAdminSession, isAdmin, startAdminSession } from "@/server/security";
@@ -9,6 +9,7 @@ import { ORDER_STATUSES_LIST } from "@/lib/order-status";
 import { allStockKeys } from "@/lib/catalogue";
 import { SettingsSchema, saveSettings } from "@/server/store";
 import { setStock } from "@/server/store";
+import { notifyOrderStatus } from "@/server/notify";
 
 export type FormResult = { ok: boolean; message: string };
 
@@ -53,14 +54,28 @@ export async function updateOrder(_: FormResult | null, form: FormData): Promise
   if (!parsed.success) return { ok: false, message: "That didn't look right. Please try again." };
 
   const db = await getDb();
-  await db
+  const [before] = await db
+    .select({ status: schema.orders.status })
+    .from(schema.orders)
+    .where(eq(schema.orders.id, parsed.data.orderId));
+  if (!before) return { ok: false, message: "We couldn't find that order." };
+
+  const [updated] = await db
     .update(schema.orders)
     .set({
       status: parsed.data.status as (typeof ORDER_STATUSES_LIST)[number],
       trackingNote: parsed.data.trackingNote || null,
+      updatedAt: sql`now()`,
     })
-    .where(eq(schema.orders.id, parsed.data.orderId));
+    .where(eq(schema.orders.id, parsed.data.orderId))
+    .returning();
 
+  // Only tell the buyer when the status really moved - re-saving the same
+  // status (e.g. to fix a typo in the tracking note) shouldn't re-notify.
+  if (updated && updated.status !== before.status) {
+    const sent = await notifyOrderStatus(updated);
+    if (sent.length) return { ok: true, message: `Order updated. Customer notified by ${sent.join(" and ")}.` };
+  }
   return { ok: true, message: "Order updated." };
 }
 

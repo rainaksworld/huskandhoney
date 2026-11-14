@@ -1,6 +1,8 @@
 import "server-only";
 import { formatINR } from "@/lib/catalogue";
 import { orderNumber } from "./orders";
+import { STATUS_LABEL } from "@/lib/order-status";
+import type { OrderStatus } from "./schema";
 
 /**
  * Transactional email through Resend's HTTP API (no SDK dependency).
@@ -102,4 +104,26 @@ export async function sendOrderEmails(o: OrderLike, items: ItemLike[]) {
       replyTo: o.email,
     });
   }
+}
+
+/** A logistics update (packed/shipped/delivered/cancelled) after the order's own confirmation email. */
+export async function sendStatusEmail(
+  o: Pick<OrderLike, "id" | "seq" | "accessToken" | "name" | "email">,
+  status: OrderStatus,
+  trackingNote: string | null,
+) {
+  const site = process.env.SITE_URL ?? "";
+  const number = orderNumber(o.seq);
+  const link = site ? `${site}/order/${o.id}?t=${o.accessToken}` : "";
+  const label = STATUS_LABEL[status];
+  const paras = [`Hi ${o.name.split(" ")[0]},`, `Your order ${number} is now: ${label}.`];
+  if (trackingNote) paras.push(trackingNote);
+  if (link) paras.push(`See your order any time: ${link}`);
+  paras.push("Husk & Honey, Siliguri");
+  return sendMail({
+    to: o.email,
+    subject: `Order ${number}: ${label}`,
+    text: paras.join("\n\n"),
+    replyTo: process.env.OWNER_EMAIL,
+  });
 }

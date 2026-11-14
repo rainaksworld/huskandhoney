@@ -61,6 +61,8 @@ export const orders = pgTable(
     providerPaymentId: text("provider_payment_id"),
     stockApplied: boolean("stock_applied").notNull().default(false),
     trackingNote: text("tracking_note"),
+    /** Buyer opted in to WhatsApp order updates and offers at checkout. */
+    whatsappOptIn: boolean("whatsapp_opt_in").notNull().default(false),
     paidAt: timestamp("paid_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

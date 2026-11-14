@@ -11,7 +11,7 @@ import {
   type StartedCheckout,
 } from "@/server/orders";
 import { activeProvider, sandboxSign, verifyCheckoutSignature } from "@/server/payments";
-import { sendOrderEmails } from "@/server/email";
+import { notifyOrderPaid } from "@/server/notify";
 import { eq } from "drizzle-orm";
 import { updateTag } from "next/cache";
 import { getCoffee, getEquipment, getKit } from "@/lib/catalogue";
@@ -125,7 +125,7 @@ export async function confirmPayment(input: {
     updateTag("stock");
     const db = await getDb();
     const items = await db.select().from(schema.orderItems).where(eq(schema.orderItems.orderId, paid.id));
-    await sendOrderEmails(paid, items);
+    await notifyOrderPaid(paid, items);
   }
   return { ok: true, orderId: paid.id, token: paid.accessToken };
 }
