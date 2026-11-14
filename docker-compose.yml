@@ -32,6 +32,7 @@ services:
       MAIL_FROM: ${MAIL_FROM:-}
       OWNER_EMAIL: ${OWNER_EMAIL:-}
       COMING_SOON: ${COMING_SOON:-true}
+      PREVIEW_KEY: ${PREVIEW_KEY:-}
     expose:
       - "3000"
 

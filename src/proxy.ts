@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+const PREVIEW_COOKIE = "hh_preview";
+
 /**
  * "Coming soon" gate for the whole site. Controlled by the COMING_SOON env
  * var: set to "false" (or unset the var entirely) to open the real site to
@@ -8,12 +10,35 @@ import type { NextRequest } from "next/server";
  * /admin, the API routes (needed for webhooks), and Next.js' own internal
  * assets all pass through untouched so the site can keep being built behind
  * the scenes.
+ *
+ * Visiting the site with ?preview=<PREVIEW_KEY> once unlocks the real site
+ * for that browser (via a cookie) until COMING_SOON is turned off, so the
+ * site can be reviewed and tested before launch without visitors seeing it.
  */
 export function proxy(request: NextRequest) {
   const comingSoon = (process.env.COMING_SOON ?? "true").toLowerCase() !== "false";
   if (!comingSoon) return NextResponse.next();
 
-  const { pathname } = request.nextUrl;
+  const previewKey = process.env.PREVIEW_KEY;
+  const { pathname, searchParams } = request.nextUrl;
+
+  if (previewKey && searchParams.get("preview") === previewKey) {
+    const url = request.nextUrl.clone();
+    url.searchParams.delete("preview");
+    const res = NextResponse.redirect(url);
+    res.cookies.set(PREVIEW_COOKIE, previewKey, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 30,
+      path: "/",
+    });
+    return res;
+  }
+
+  const hasPreviewAccess = Boolean(previewKey) && request.cookies.get(PREVIEW_COOKIE)?.value === previewKey;
+  if (hasPreviewAccess) return NextResponse.next();
+
   const allowed =
     pathname.startsWith("/admin") ||
     pathname.startsWith("/api") ||
