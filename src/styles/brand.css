@@ -832,3 +832,15 @@ html.zoomed{overflow:hidden}
   .admin-cards td:nth-child(4){grid-area:tot;font-weight:700;text-align:right}
   .admin-cards td:nth-child(5){grid-area:st;text-align:right}
 }
+
+/* Grinder fix: .hv.hv-rot's own `animation` shorthand reset the paused state,
+   so the crank turned non-stop. Keep it paused until hover like the rest. */
+.pcard .hv.hv-rot{animation-play-state:paused}
+.pcard:hover .hv.hv-rot,.pcard:focus-visible .hv.hv-rot{animation-play-state:running}
+/* Phones and tablets (no mouse): product illustrations stay still. */
+@media (hover:none){.pcard .hv,.pcard .hv.hv-rot{animation:none!important}.pcard .fx{visibility:hidden!important}}
+/* Phones: the four filters sit in a tidy 2x2 grid. */
+@media (max-width:640px){
+  .shop-bar #filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
+  .shop-bar #filters .chip,.shop-bar #filters .chip span{width:100%;justify-content:center}
+}

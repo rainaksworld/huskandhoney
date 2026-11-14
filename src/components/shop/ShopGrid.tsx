@@ -21,6 +21,8 @@ const EASE = "cubic-bezier(.2,.7,.2,1)";
 export function ShopGrid({ cards }: { cards: CardData[] }) {
   const [filter, setFilter] = useState<Filter>("all");
   const [layout, setLayout] = useState<Layout>("showcase");
+  // Phones always get Showcase; the layout switch is hidden there.
+  const [phone, setPhone] = useState(false);
   const grid = useRef<HTMLDivElement>(null);
   const before = useRef<Map<string, DOMRect> | null>(null);
 
@@ -34,7 +36,13 @@ export function ShopGrid({ cards }: { cards: CardData[] }) {
       const l = localStorage.getItem("hh_layout");
       if (l === "showcase" || l === "grid" || l === "list") setLayout(l);
     } catch {}
+    const mq = matchMedia("(max-width: 640px)");
+    const sync = () => setPhone(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
   }, []);
+  const shown: Layout = phone ? "showcase" : layout;
 
   const snapshot = () => {
     const m = new Map<string, DOMRect>();
@@ -101,6 +109,7 @@ export function ShopGrid({ cards }: { cards: CardData[] }) {
             </label>
           ))}
         </fieldset>
+        {!phone && (
         <fieldset className="filters layout" id="layout" aria-label="Choose layout">
           {LAYOUTS.map((l) => (
             <label className="chip" key={l.v}>
@@ -109,12 +118,13 @@ export function ShopGrid({ cards }: { cards: CardData[] }) {
             </label>
           ))}
         </fieldset>
+        )}
       </div>
-      <div className="shop-grid" id="grid" data-layout={layout} ref={grid}>
+      <div className="shop-grid" id="grid" data-layout={shown} ref={grid}>
         {cards.map((c) => {
           const hidden = filter !== "all" && c.cat !== filter;
           // Both estates get the same large tile in Showcase, so neither reads as "the hero".
-          const feat = layout === "showcase" && c.cat === "coffee" && Boolean(c.href);
+          const feat = shown === "showcase" && c.cat === "coffee" && Boolean(c.href);
           return (
             <div key={c.slug} data-key={c.slug} hidden={hidden} className={`cell${feat ? " feat" : ""}`}>
               <ProductCard c={c} />
