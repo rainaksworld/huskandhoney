@@ -1,4 +1,5 @@
 import { COFFEES, COFFEE_PRICE, EQUIPMENT, HOUSE_BLEND, KITS, formatINR } from "./catalogue";
+import { BAG_IMAGE } from "./bag-images";
 import type { CardData } from "@/components/product/ProductCard";
 
 export function shopCards(): CardData[] {
@@ -12,6 +13,9 @@ export function shopCards(): CardData[] {
       name: c.name,
       line: c.line,
       price: `From ${formatINR(COFFEE_PRICE["250"])}`,
+      // Shop cards show the medium roast by default - it's each coffee's
+      // default selection on its own product page too.
+      image: BAG_IMAGE.medium,
     })),
     {
       slug: HOUSE_BLEND.slug,

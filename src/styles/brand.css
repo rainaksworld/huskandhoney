@@ -354,6 +354,7 @@ input[type=range]{width:100%;accent-color:var(--blue);background:transparent}
 .pcard .tile{aspect-ratio:240/190;display:grid;place-items:center;background:#E9DDC4}
 .pcard .tile.blue{background:#678BC7}.pcard .tile.olive{background:#4B682F}
 .pcard .tile svg{width:100%;height:100%;display:block}
+.pcard .tile img{width:100%;height:100%;display:block;object-fit:contain;padding:8%}
 .pcard .pt{display:flex;flex-direction:column;gap:6px;padding:16px 18px 20px}
 .pcard h3{margin:0;font-size:clamp(24px,2.2vw,32px)}
 .pcard p{margin:0;font-size:14px;line-height:1.4;color:var(--dim)}
@@ -397,8 +398,8 @@ input[type=range]{width:100%;accent-color:var(--blue);background:transparent}
 .pcard.rv,.cat.rv{transition:opacity .8s ease var(--d,0s),transform .8s cubic-bezier(.2,.7,.2,1) var(--d,0s),border-color .25s}
 .pcard.rv.in,.cat.rv.in{transition:transform .3s cubic-bezier(.2,.7,.2,1),border-color .25s,opacity .3s}
 .pcard[hidden]{display:none}
-.pcard .tile svg{transition:transform .6s cubic-bezier(.2,.7,.2,1)}
-.pcard:hover .tile svg{transform:scale(1.05)}
+.pcard .tile svg,.pcard .tile img{transition:transform .6s cubic-bezier(.2,.7,.2,1)}
+.pcard:hover .tile svg,.pcard:hover .tile img{transform:scale(1.05)}
 #bagBtn.pop{animation:pop .45s cubic-bezier(.3,1.6,.5,1)}
 @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.12)}100%{transform:scale(1)}}
 .accs{display:flex;flex-direction:column;border-bottom:1px dashed var(--line)}
@@ -414,7 +415,7 @@ input[type=range]{width:100%;accent-color:var(--blue);background:transparent}
 .acc-b ul{list-style:none;padding:0}
 .pinfo .acc-b li{border-top:0;padding:5px 0;font:400 15px/1.4 var(--f-ui);letter-spacing:0;text-transform:none}
 .pinfo .acc-b li::before{content:'\2022';margin-right:10px;color:var(--dim)}
-@media (prefers-reduced-motion:reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none !important}.pcard:hover .tile svg{transform:none}}
+@media (prefers-reduced-motion:reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none !important}.pcard:hover .tile svg,.pcard:hover .tile img{transform:none}}
 
 /* ---- flat colour bands (replaces rounded cards) ---- */
 html,body{background:#F6EEDF}
@@ -584,7 +585,7 @@ body.has-addbar .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
   .pcard:hover,.pcard:focus-visible{transform:translateY(-8px);box-shadow:0 18px 36px rgba(30,42,21,.22);border-color:var(--accent-text)}
   .pcard:hover .pt::after,.pcard:focus-visible .pt::after{opacity:1;transform:none}
 }
-@media (prefers-reduced-motion:reduce){.pcard:hover,.pcard:focus-visible{transform:none}.pcard:hover .tile svg{transform:none}}
+@media (prefers-reduced-motion:reduce){.pcard:hover,.pcard:focus-visible{transform:none}.pcard:hover .tile svg,.pcard:hover .tile img{transform:none}}
 
 /* --- shop cards: illustrations come alive on hover, same moves as the brew guide --- */
 .pcard .tile svg{overflow:visible}

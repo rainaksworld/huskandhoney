@@ -12,13 +12,19 @@ export type CardData = {
   line: string;
   price: string | null;
   soon?: boolean;
+  /** Real product photo. When set, this replaces the placeholder line art. */
+  image?: string;
 };
 
-/** Product tile with line-illustration art that comes alive on hover. */
+/** Product tile: a real photo when one exists, otherwise placeholder line-illustration art that comes alive on hover. */
 export function ProductCard({ c }: { c: CardData }) {
   const art = (
     <div className={`tile ${c.tile}`.trim()}>
-      <svg viewBox="0 0 240 190" aria-hidden="true" dangerouslySetInnerHTML={{ __html: ART[c.slug] ?? "" }} />
+      {c.image ? (
+        <img src={c.image} alt="" loading="lazy" />
+      ) : (
+        <svg viewBox="0 0 240 190" aria-hidden="true" dangerouslySetInnerHTML={{ __html: ART[c.slug] ?? "" }} />
+      )}
     </div>
   );
   const body = (
