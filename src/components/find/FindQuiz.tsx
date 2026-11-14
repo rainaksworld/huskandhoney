@@ -197,7 +197,7 @@ export function FindQuiz() {
               )}
             </div>
             <p className="legal">
-              Tasting notes are available for Arabica 02 (Kalebung) today. Arabica 01 (Darjeeling) notes are coming soon.
+              Tasting notes are available for Kalebung Specialty today. Darjeeling Specialty notes are coming soon.
             </p>
             {!out && shop && left !== null && left <= shop.lowStockAt && (
               <p className="stock" role="status">

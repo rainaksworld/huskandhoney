@@ -114,7 +114,7 @@ export const COFFEES: Coffee[] = [
   {
     kind: "coffee",
     slug: "arabica-01",
-    name: "Arabica 01",
+    name: "Darjeeling Specialty",
     estate: "Darjeeling",
     line: "Darjeeling estate. Light, medium or dark; beans or ground.",
     notes: null,
@@ -124,7 +124,7 @@ export const COFFEES: Coffee[] = [
   {
     kind: "coffee",
     slug: "arabica-02",
-    name: "Arabica 02",
+    name: "Kalebung Specialty",
     estate: "Kalebung",
     line: "Kalebung estate. Light, medium or dark; beans or ground.",
     notes: KALEBUNG_NOTES,
