@@ -23,8 +23,17 @@ export function CartDrawer() {
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
-      <Dialog.Portal forceMount>
-        <Dialog.Overlay forceMount className={`scrim${open ? " open" : ""}`} />
+      <Dialog.Portal>
+        {/*
+          No forceMount on Portal or Overlay (unlike Content below, which
+          needs to stay mounted for its slide-in CSS transition): an Overlay
+          without its own forceMount prop would otherwise inherit Portal's,
+          making it "present" - and therefore scroll-locking the page via
+          Radix - at all times, including while the drawer is closed. That
+          was blocking scrolling on every page. The Overlay's own open/close
+          fade still works fine via Presence's built-in animation detection.
+        */}
+        <Dialog.Overlay className={`scrim${open ? " open" : ""}`} />
         <Dialog.Content
           forceMount
           className={`drawer${open ? " open" : ""}`}

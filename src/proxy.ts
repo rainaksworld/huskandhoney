@@ -48,7 +48,8 @@ export function proxy(request: NextRequest) {
     pathname === "/sitemap.xml" ||
     pathname.startsWith("/img") ||
     pathname.startsWith("/assets") ||
-    pathname.startsWith("/fonts");
+    pathname.startsWith("/fonts") ||
+    pathname.startsWith("/sounds");
   if (allowed) return NextResponse.next();
 
   return new NextResponse(COMING_SOON_HTML, {
