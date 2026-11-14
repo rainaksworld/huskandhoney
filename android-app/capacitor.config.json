@@ -1,0 +1,16 @@
+{
+  "appId": "in.huskandhoney.admin",
+  "appName": "Husk Admin",
+  "webDir": "www",
+  "backgroundColor": "#F6EEDF",
+  "server": {
+    "url": "https://huskandhoney.in/admin",
+    "androidScheme": "https",
+    "allowNavigation": ["huskandhoney.in"],
+    "errorPath": "error.html"
+  },
+  "android": {
+    "appendUserAgent": "HuskHoneyAdminApp/1.0",
+    "allowMixedContent": false
+  }
+}

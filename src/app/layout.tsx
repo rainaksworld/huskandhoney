@@ -29,8 +29,8 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-/** Runs before first paint: show the logo loading screen only once per visit. */
-const bootScript = `try{if(sessionStorage.getItem('hh_boot'))document.documentElement.classList.add('hh-seen');else sessionStorage.setItem('hh_boot','1')}catch(e){document.documentElement.classList.add('hh-seen')}`;
+/** Runs before first paint: mark the Android admin app (so the shop chrome can be hidden), and show the logo loading screen only once per visit. */
+const bootScript = `try{if(navigator.userAgent.indexOf('HuskHoneyAdminApp')>-1)document.documentElement.classList.add('hh-app')}catch(e){}try{if(sessionStorage.getItem('hh_boot'))document.documentElement.classList.add('hh-seen');else sessionStorage.setItem('hh_boot','1')}catch(e){document.documentElement.classList.add('hh-seen')}`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

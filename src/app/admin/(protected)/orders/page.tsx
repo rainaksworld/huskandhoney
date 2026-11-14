@@ -18,7 +18,7 @@ export default async function AdminOrdersPage() {
         <p className="lead">No orders yet.</p>
       ) : (
         <div className="admin-table-wrap">
-          <table className="admin-table">
+          <table className="admin-table admin-cards">
             <thead>
               <tr>
                 <th>Order</th>

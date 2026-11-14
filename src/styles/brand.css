@@ -807,3 +807,28 @@ html.zoomed{overflow:hidden}
 .brew-chime-banner .btn:hover{background:#1E2A15}
 @keyframes chimePulse{0%,100%{box-shadow:0 14px 34px rgba(15,26,46,.28)}50%{box-shadow:0 14px 34px rgba(15,26,46,.5),0 0 0 6px rgba(103,139,199,.25)}}
 @media (prefers-reduced-motion:reduce){.brew-chime-banner{animation:none}}
+
+/* Android admin app (its web view adds "HuskHoneyAdminApp" to the browser name):
+   no shop header/footer/loading screen, and the admin menu becomes a bottom tab bar. */
+.hh-app .nav,.hh-app .foot,.hh-app .boot,.hh-app .skip,.hh-app .scrim,.hh-app .drawer{display:none!important}
+.hh-app .sec.page{padding-top:max(20px,env(safe-area-inset-top));padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+.hh-app .admin-nav{position:fixed;left:0;right:0;bottom:0;z-index:50;flex-wrap:nowrap;gap:0;padding:0 0 env(safe-area-inset-bottom);border:0;border-top:1px solid var(--line);background:var(--bg);justify-content:space-around;overflow-x:auto}
+.hh-app .admin-nav>a,.hh-app .admin-nav .admin-nav-logout{flex:1 0 auto;text-align:center;padding:18px 10px;font-size:11px;opacity:.8}
+.hh-app .admin-nav-title,.hh-app .admin-nav-spacer,.hh-app .admin-nav a[href="/"]{display:none}
+
+/* Orders list: tappable cards instead of a wide table on phones. */
+@media (max-width:640px){
+  .admin-cards{min-width:0;display:block}
+  .admin-cards thead{display:none}
+  .admin-cards tbody{display:flex;flex-direction:column;gap:12px}
+  .admin-table-wrap:has(.admin-cards){border:0;overflow:visible}
+  .admin-cards tr{position:relative;display:grid;grid-template-columns:1fr auto;grid-template-areas:"no st" "cu tot" "dt dt";gap:6px 12px;align-items:center;padding:16px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+  .admin-cards td{display:block;padding:0;border:0;min-width:0;overflow-wrap:anywhere}
+  .admin-cards td:nth-child(1){grid-area:no;font:700 17px/1.2 var(--f-ui)}
+  .admin-cards td:nth-child(1) a{text-decoration:none}
+  .admin-cards td:nth-child(1) a::after{content:"";position:absolute;inset:0}
+  .admin-cards td:nth-child(2){grid-area:dt;font-size:12px;opacity:.65}
+  .admin-cards td:nth-child(3){grid-area:cu}
+  .admin-cards td:nth-child(4){grid-area:tot;font-weight:700;text-align:right}
+  .admin-cards td:nth-child(5){grid-area:st;text-align:right}
+}
