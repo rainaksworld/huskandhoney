@@ -157,8 +157,10 @@ function BrewTimer({ method }: { method: MethodKey }) {
   const [left, setLeft] = useState(m.secs);
   const [running, setRunning] = useState(false);
   const [done, setDone] = useState(false);
+  const [ringing, setRinging] = useState(false);
   const endAt = useRef(0);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const audio = useRef<HTMLAudioElement | null>(null);
 
   const stopTimer = () => {
     if (timer.current) clearInterval(timer.current);
@@ -166,24 +168,31 @@ function BrewTimer({ method }: { method: MethodKey }) {
     setRunning(false);
   };
 
-  useEffect(() => stopTimer, []);
+  const stopChime = () => {
+    const a = audio.current;
+    if (a) {
+      a.pause();
+      a.currentTime = 0;
+    }
+    setRinging(false);
+  };
 
-  function beep() {
-    try {
-      const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      const ctx = new Ctx();
-      [0, 0.25, 0.5].forEach((d) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.frequency.value = 880;
-        gain.gain.value = 0.08;
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(ctx.currentTime + d);
-        osc.stop(ctx.currentTime + d + 0.15);
-      });
-    } catch {}
-  }
+  // Unmount cleanup only (empty deps): stops the interval and the chime if
+  // the page is left while the timer is running or ringing.
+  useEffect(() => () => {
+    stopTimer();
+    stopChime();
+  }, []);
+
+  const startChime = () => {
+    setRinging(true);
+    const a = audio.current;
+    if (a) {
+      a.currentTime = 0;
+      a.loop = true;
+      a.play().catch(() => {});
+    }
+  };
 
   const tick = () => {
     const remaining = (endAt.current - Date.now()) / 1000;
@@ -191,7 +200,7 @@ function BrewTimer({ method }: { method: MethodKey }) {
       stopTimer();
       setLeft(0);
       setDone(true);
-      beep();
+      startChime();
     } else {
       setLeft(remaining);
     }
@@ -202,6 +211,7 @@ function BrewTimer({ method }: { method: MethodKey }) {
       stopTimer();
       return;
     }
+    stopChime();
     const startFrom = left <= 0 ? m.secs : left;
     setLeft(startFrom);
     setDone(false);
@@ -212,6 +222,7 @@ function BrewTimer({ method }: { method: MethodKey }) {
 
   const resetTimer = () => {
     stopTimer();
+    stopChime();
     setLeft(m.secs);
     setDone(false);
   };
@@ -253,6 +264,15 @@ function BrewTimer({ method }: { method: MethodKey }) {
         ))}
       </ol>
       <p className="legal">Starting points. Adjust to taste.</p>
+      <audio ref={audio} src="/sounds/brew-timer-chime.mp3" preload="auto" />
+      {ringing && (
+        <div className="brew-chime-banner" role="alert">
+          <span>Brew timer done</span>
+          <button className="btn" type="button" onClick={stopChime}>
+            Stop
+          </button>
+        </div>
+      )}
     </div>
   );
 }
