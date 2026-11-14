@@ -600,7 +600,11 @@ body.has-addbar .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 .hv-dp{animation:dripd 1.4s ease-in infinite}.hv-dp.d2{animation-delay:-.45s}.hv-dp.d3{animation-delay:-.9s}
 .hv-plg{animation:hvPlg 1.8s ease-in-out infinite}
 @keyframes hvPlg{0%,10%{transform:translateY(0)}65%,100%{transform:translateY(26px)}}
-.hv-rot{transform-box:view-box;transform-origin:120px 48px;animation:hvRot 1.6s linear infinite}
+/* `.hv.hv-rot` (not just `.hv-rot`) so this ties `.pcard .hv`'s specificity
+   and wins on source order - otherwise `.pcard .hv`'s transform-box:fill-box
+   beats this transform-box:view-box, the rotation origin lands in the wrong
+   coordinate space, and the hand grinder's crank handle spins off-canvas. */
+.hv.hv-rot{transform-box:view-box;transform-origin:120px 48px;animation:hvRot 1.6s linear infinite}
 @keyframes hvRot{to{transform:rotate(360deg)}}
 .hv-press{animation:hvPress 1.4s ease-in-out infinite}
 @keyframes hvPress{50%{transform:translateY(5px)}}
