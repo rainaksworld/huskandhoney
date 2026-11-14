@@ -18,7 +18,7 @@ import {
   type Roast,
   type Size,
 } from "@/lib/catalogue";
-import { BAG_SCENES } from "@/lib/bag-scenes";
+import { BAG_IMAGE } from "@/lib/bag-images";
 import { useCart } from "@/components/cart/CartProvider";
 import { Accordion } from "@/components/ui/Accordion";
 
@@ -167,27 +167,17 @@ export function CoffeeBuy({ coffee }: { coffee: Coffee }) {
           <div className="arch" aria-hidden="true" />
           <div className="bag-wrap" id="bagWrap" style={{ ["--sc" as string]: size === "500" ? "1.1" : "1" }}>
             <div className="bag-float">
-              <div className="bag" id="bag" data-roast={roast} role="img" aria-label={`Coffee bag: ${summary}`} ref={bag}>
-                <div className="crimp" />
-                <div className="zip" />
-                <div className="logo" aria-hidden="true" />
-                <div className="meta">
-                  <div className="b-name">{coffee.name.toUpperCase()}</div>
-                  <div className="b-pill">{ROAST_LABEL[roast].toUpperCase()}</div>
-                  <div className="b-grind">{grindText.toUpperCase()}</div>
-                </div>
-                <div className="b-wt">{size} g</div>
-                <div className="scene" aria-hidden="true">
-                  {ROASTS.map((r) => (
-                    <svg
-                      key={r}
-                      className={`s-${r}`}
-                      viewBox="0 0 300 160"
-                      preserveAspectRatio="xMidYMax slice"
-                      dangerouslySetInnerHTML={{ __html: BAG_SCENES[r] }}
-                    />
-                  ))}
-                </div>
+              <div className="bag" id="bag" data-roast={roast} ref={bag}>
+                {ROASTS.map((r) => (
+                  <img
+                    key={r}
+                    className={`b-photo${r === roast ? " on" : ""}`}
+                    src={BAG_IMAGE[r]}
+                    alt={r === roast ? `${coffee.name} bag, ${summary}` : ""}
+                    aria-hidden={r === roast ? undefined : true}
+                    loading={r === "medium" ? "eager" : "lazy"}
+                  />
+                ))}
                 <div className="sheen" />
               </div>
             </div>

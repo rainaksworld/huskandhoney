@@ -132,22 +132,13 @@ main{padding:0 clamp(8px,1.2vw,16px) clamp(8px,1.2vw,16px)}
 .bag-wrap{position:relative;z-index:1;width:clamp(200px,23vw,320px);aspect-ratio:300/440;container-type:inline-size;--sc:1;transform:scale(var(--sc));transition:transform .7s cubic-bezier(.2,.8,.2,1)}
 .bag-float{width:100%;height:100%;animation:bob 7s ease-in-out infinite}
 @keyframes bob{50%{transform:translateY(-8px)}}
-.bag{--bag:#678BC7;--logo-c:#F1E4D3;--txt:#F1E4D3;--pill-bg:#F0E2B3;--pill-fg:#2a3a1a;position:relative;width:100%;height:100%;background:var(--bag);color:var(--txt);border-radius:2.6cqw 2.6cqw 1.6cqw 1.6cqw;overflow:hidden;transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:background .6s,color .6s;transform-style:preserve-3d;will-change:transform}
-.bag[data-roast="light"]{--bag:#F1E4D3;--logo-c:#678BC7;--txt:#3b4723;--pill-bg:#4B682F;--pill-fg:#F1E4D3}
-.bag[data-roast="medium"]{--bag:#678BC7;--logo-c:#F1E4D3;--txt:#F1E4D3;--pill-bg:#F0E2B3;--pill-fg:#2a3a1a}
-.bag[data-roast="dark"]{--bag:#4B682F;--logo-c:#F1E4D3;--txt:#F1E4D3;--pill-bg:#678BC7;--pill-fg:#0F140C}
-.crimp{position:absolute;inset:0 0 auto 0;height:5.4cqw;background:repeating-linear-gradient(90deg,rgba(0,0,0,.12) 0 .5cqw,transparent .5cqw 1.5cqw);border-bottom:.3cqw solid rgba(0,0,0,.1)}
-.zip{position:absolute;top:9cqw;left:5cqw;right:5cqw;height:.7cqw;background:rgba(0,0,0,.16);border-radius:1cqw}
-.bag .logo{position:absolute;top:14.5cqw;left:50%;width:58cqw;transform:translateX(-50%);transition:background .6s}
-.meta{position:absolute;left:8cqw;top:61cqw;display:flex;flex-direction:column;gap:2.4cqw;align-items:flex-start}
-.b-name{font:600 5.4cqw/1 var(--f-ui);letter-spacing:.06em}
-.b-pill{font:600 3.2cqw/1 var(--f-ui);letter-spacing:.08em;background:var(--pill-bg);color:var(--pill-fg);padding:1.9cqw 3.4cqw;border-radius:5cqw;transition:background .6s,color .6s}
-.b-grind{font:500 3cqw/1.2 var(--f-ui);letter-spacing:.08em;opacity:.9}
-.b-wt{position:absolute;right:8cqw;top:61cqw;font-family:var(--f-display);font-weight:800;font-variation-settings:"SOFT" 100,"WONK" 1;font-size:9cqw;line-height:1}
-.scene{position:absolute;inset:auto 0 0 0;height:55cqw}
-.scene svg{position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity .6s}
-.bag[data-roast="light"] .s-light,.bag[data-roast="medium"] .s-medium,.bag[data-roast="dark"] .s-dark{opacity:1}
-.sheen{position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent calc(var(--sx,30)*1% - 22%),rgba(255,255,255,.2) calc(var(--sx,30)*1%),transparent calc(var(--sx,30)*1% + 22%)),linear-gradient(180deg,transparent 80%,rgba(0,0,0,.14))}
+.bag{position:relative;width:100%;height:100%;border-radius:2.6cqw 2.6cqw 1.6cqw 1.6cqw;overflow:hidden;transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transform-style:preserve-3d;will-change:transform}
+/* Real pack photography: all three roasts are rendered and cross-faded via
+   opacity (rather than swapping `src`), so switching roasts never shows a
+   loading flash - the inactive photos just sit at opacity 0. */
+.b-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .6s}
+.b-photo.on{opacity:1}
+.sheen{position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent calc(var(--sx,30)*1% - 22%),rgba(255,255,255,.14) calc(var(--sx,30)*1%),transparent calc(var(--sx,30)*1% + 22%))}
 .summary{min-height:2.6em}
 
 /* kits */
