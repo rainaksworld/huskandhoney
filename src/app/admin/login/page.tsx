@@ -5,7 +5,7 @@ export const metadata: Metadata = { title: "Admin login", robots: { index: false
 
 export default function AdminLoginPage() {
   return (
-    <section className="sec page" aria-labelledby="al-h">
+    <section className="sec page no-pat no-pat-page" aria-labelledby="al-h">
       <div className="col rv">
         <p className="lab dim">Husk & Honey</p>
         <h1 className="disp h2" id="al-h">

@@ -23,7 +23,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   await connection(); // the session cookie is only known at request time
   if (!adminEnabled()) {
     return (
-      <section className="sec page">
+      <section className="sec page no-pat no-pat-page">
         <div className="col rv">
           <p className="lab dim">Admin</p>
           <h1 className="disp h2">not set up yet.</h1>
@@ -38,7 +38,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!(await isAdmin())) redirect("/admin/login");
 
   return (
-    <section className="sec page admin-shell" aria-label="Admin">
+    <section className="sec page admin-shell no-pat" aria-label="Admin">
       <nav className="admin-nav" aria-label="Admin sections">
         <span className="admin-nav-title">Admin</span>
         {NAV.map((n) => (

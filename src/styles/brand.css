@@ -727,7 +727,7 @@ html.zoomed{overflow:hidden}
 }
 
 /* --- find your coffee: redesigned --- */
-.find{background:#F6EEDF url("/assets/find-bg.svg") center/520px repeat;min-height:calc(100svh - 72px)}
+.find{min-height:calc(100svh - 72px)}
 .find-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(28px,5vw,80px);align-items:start}
 .find-left{display:flex;flex-direction:column;gap:clamp(24px,3vw,40px)}
 .find .quiz{gap:clamp(20px,2.4vw,30px)}
@@ -863,3 +863,12 @@ html.zoomed{overflow:hidden}
   .mug-lyr,.mug-gr,.mug-surf,.mug-crema,.mug-art,.mug-bub,.mug-tint,.mug-caustic,.mug-steam,.mug-call{transition:none}
   .mug-wisp{animation:none}
 }
+
+/* Site background: honey waves and scattered beans on every plain cream area.
+   Coloured themes (and the admin) switch it off with --pat:none. On computers
+   it stays put while the page scrolls, so sections line up seamlessly. */
+:root{--pat:url("/assets/bg-waves-beans.svg")}
+.t-olive,.t-blue,.t-honey,.no-pat{--pat:none}
+body,.sec,.hero-sticky{background-image:var(--pat);background-size:520px;background-repeat:repeat;background-position:0 0}
+@media (hover:hover) and (pointer:fine){body,.sec,.hero-sticky{background-attachment:fixed}}
+body:has(.admin-shell),body:has(.no-pat-page){background-image:none}
