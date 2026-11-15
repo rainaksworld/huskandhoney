@@ -12,7 +12,8 @@ import {
   type Grind,
   type Roast,
 } from "@/lib/catalogue";
-import { QUIZ_CUP_ART, QUIZ_METHOD_ICON } from "@/lib/quiz-art";
+import { QUIZ_METHOD_ICON } from "@/lib/quiz-art";
+import { GlassMug } from "./GlassMug";
 import { useCart } from "@/components/cart/CartProvider";
 
 type MethodAnswer = "pour" | "french" | "aero" | "moka" | "espresso" | "none";
@@ -300,13 +301,7 @@ function FindLayout({
         <div className="find-right rv">
           <div className="cupcard" data-method={method ?? ""} data-roast={taste ?? ""} data-milk={milk ?? ""}>
             <p className="lab cup-prog">{answered} of 3 answered</p>
-            <svg
-              className="cupart"
-              viewBox="0 0 320 300"
-              aria-hidden="true"
-              focusable="false"
-              dangerouslySetInnerHTML={{ __html: QUIZ_CUP_ART }}
-            />
+            <GlassMug method={method} taste={taste} milk={milk} />
             <div className="cup-txt">
               <p className="lab dim">Your cup so far</p>
               <p className="cup-line">{line}</p>

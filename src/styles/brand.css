@@ -745,25 +745,10 @@ html.zoomed{overflow:hidden}
 .find-right{position:sticky;top:92px}
 .cupcard{background:#F0E2B3;border-radius:24px;padding:clamp(20px,2.6vw,36px);display:flex;flex-direction:column;gap:18px;box-shadow:0 24px 60px rgba(30,42,21,.12)}
 .cup-prog{margin:0;color:#4B682F}
-.cupart{width:min(100%,380px);height:auto;margin:0 auto;display:block;overflow:visible}
-.cupart .brewer{opacity:0;transform:translateY(8px);transition:opacity .4s,transform .4s}
-.cupcard[data-method="pour"] .b-pour,.cupcard[data-method="french"] .b-french,.cupcard[data-method="aero"] .b-aero,.cupcard[data-method="moka"] .b-moka,.cupcard[data-method="espresso"] .b-espresso,.cupcard[data-method="none"] .b-none{opacity:1;transform:none}
-.cupart .coffee{transition:fill .6s}
-.cupcard[data-roast="light"] .coffee{fill:#C98A4B}
-.cupcard[data-roast="medium"] .coffee{fill:#8A5530}
-.cupcard[data-roast="dark"] .coffee{fill:#4E2D16}
-.cupcard[data-roast] .cupart .steam{transition:opacity .6s}
-.cupcard:not([data-roast=""]) .steam{opacity:.5}
-.cupart .milk{transition:opacity .5s}
-.cupcard[data-milk="milk"] .milk{opacity:1}
-.cupart .pstream{animation:flowd .8s linear infinite}
-.cupart .pplg{animation:hvPlg 2.6s ease-in-out infinite}
-.cupart .pwisp{animation:wisp 3s ease-in-out infinite}.cupart .w2{animation-delay:-1s}.cupart .w3{animation-delay:-2s}
 .cup-txt{display:flex;flex-direction:column;gap:6px}
 .cup-line{margin:0;font-family:var(--f-disp);font-size:clamp(20px,1.8vw,26px);line-height:1.25;font-weight:500}
 .cupcard .result{grid-template-columns:1fr;background:var(--bg);padding:clamp(18px,2vw,26px);gap:16px}
-@media (max-width:1000px){.find-grid{grid-template-columns:1fr}.find-right{position:static}.cupart{width:min(100%,300px)}}
-@media (prefers-reduced-motion:reduce){.cupart .pstream,.cupart .pplg,.cupart .pwisp{animation:none}.cupart .brewer{transition:none}}
+@media (max-width:1000px){.find-grid{grid-template-columns:1fr}.find-right{position:static}}
 
 /* --- React port: each card sits in a .cell wrapper (grid item) --- */
 .shop-grid>.cell{display:flex;min-width:0}
@@ -843,4 +828,38 @@ html.zoomed{overflow:hidden}
 @media (max-width:640px){
   .shop-bar #filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
   .shop-bar #filters .chip,.shop-bar #filters .chip span{width:100%;justify-content:center}
+}
+
+/* Find your coffee: the glass mug that fills as you answer (GlassMug.tsx). */
+.mugwrap{overflow:hidden;margin:0 -8px}
+.mugart{display:block;width:100%;max-width:560px;height:auto;margin:0 auto}
+.mug-lyr{transform-box:fill-box;transform-origin:50% 100%;transition:transform 1.1s cubic-bezier(.3,.7,.2,1),fill .9s ease}
+.mug-lyr.k0{transform:scaleY(0)}.mug-lyr.k36{transform:scaleY(.36)}.mug-lyr.k66{transform:scaleY(.66)}.mug-lyr.k80{transform:scaleY(.8)}
+.mug-milk{transition-delay:.15s}.mug-foam{transition-delay:.3s}
+.mug-coffee.light,.mug-tint.light,.mug-caustic.light{fill:#A8703F}
+.mug-coffee.medium,.mug-tint.medium,.mug-caustic.medium{fill:#6B3F22}
+.mug-coffee.dark,.mug-tint.dark,.mug-caustic.dark{fill:#33200F}
+.mug-gr{transform-box:fill-box;transition:transform .8s cubic-bezier(.5,0,.4,1.3),opacity .5s}
+.mug-grinds.off .mug-gr{transform:translateY(-260px);opacity:0}
+.mug-surf{transition:fill .9s ease,opacity .6s ease .9s}.mug-surf.off{opacity:0;transition-delay:0s}
+.mug-surf.foam{fill:#FBF5EA}.mug-surf.light{fill:#B57D4A}.mug-surf.medium{fill:#7A4A29}.mug-surf.dark{fill:#3F2814}
+.mug-crema,.mug-art{transition:opacity .7s ease 1.2s}
+.mug-bub{transition:opacity .6s ease 1s}.mug-bub.on{opacity:.75}
+.mug-tint,.mug-caustic{transition:opacity 1s ease .6s,fill .9s ease}.mug-tint.on{opacity:.4}.mug-caustic.on{opacity:.45}
+.mug-steam{transition:opacity .8s ease .8s}.mug-steam.on{opacity:.5}
+.mug-call{transition:opacity .6s ease .5s}
+.mug-crema.off,.mug-art.off,.mug-bub.off,.mug-tint.off,.mug-caustic.off,.mug-steam.off,.mug-call.off{opacity:0;transition-delay:0s}
+.mug-wisp{animation:mugWisp 2.6s ease-in-out infinite}.mug-wisp.w2{animation-delay:-.9s}.mug-wisp.w3{animation-delay:-1.7s}
+@keyframes mugWisp{0%{transform:translateY(6px);opacity:0}40%{opacity:1}100%{transform:translateY(-14px);opacity:0}}
+.mug-k{font:700 10px var(--f-ui);letter-spacing:1.2px;fill:#3B5E9C}
+.mug-v{font:900 20px var(--f-display);fill:#1E2A15}
+.mug-n{font:500 11px var(--f-ui);fill:#4A5338}
+/* Phones: drop the side labels (the line under the mug says the same) and frame just the mug. */
+@media (max-width:640px){
+  .mug-call{display:none}
+  .mugart{width:153%;max-width:none;margin-left:-41%}
+}
+@media (prefers-reduced-motion:reduce){
+  .mug-lyr,.mug-gr,.mug-surf,.mug-crema,.mug-art,.mug-bub,.mug-tint,.mug-caustic,.mug-steam,.mug-call{transition:none}
+  .mug-wisp{animation:none}
 }
