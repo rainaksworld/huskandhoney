@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { METHODS, type MethodKey } from "@/lib/catalogue";
 import { BREW_ART } from "@/lib/brew-art";
+import { QUIZ_METHOD_ICON } from "@/lib/quiz-art";
 
 const METHOD_ORDER: MethodKey[] = ["pour", "french", "moka", "aero", "espresso"];
 const PRESETS = [
-  { w: 250, label: "1 cup · 250 ml" },
-  { w: 500, label: "2 cups · 500 ml" },
-  { w: 750, label: "3 cups · 750 ml" },
+  { w: 250, cups: "1 cup" },
+  { w: 500, cups: "2 cups" },
+  { w: 750, cups: "3 cups" },
 ];
 
 function fmtTime(s: number, dur: number) {
@@ -50,98 +51,145 @@ export function BrewGuide() {
   };
 
   return (
-    <section className="sec page" id="brew" aria-labelledby="brew-h">
-      <div className="col rv">
-        <p className="lab dim">Brew</p>
+    <section className="sec page brewpage" id="brew" aria-labelledby="brew-h">
+      <div className="brew-head rv">
+        <p className="lab dim">Brew guide</p>
         <h1 className="disp h2" id="brew-h">
           brew it your way.
         </h1>
+        <ol className="brew-how" aria-label="How to use the brew guide">
+          <li>
+            <span className="qnum">1</span>
+            <span>
+              <b>Pick your brewer.</b> Tap pour over, French press, moka pot, AeroPress or espresso.
+            </span>
+          </li>
+          <li>
+            <span className="qnum">2</span>
+            <span>
+              <b>Set how much you are making.</b> Tap a cup size or drag the water slider. We work out how much
+              coffee to weigh.
+            </span>
+          </li>
+          <li>
+            <span className="qnum">3</span>
+            <span>
+              <b>Brew along.</b> Press Start on the timer and follow the steps. It chimes when you are done.
+            </span>
+          </li>
+        </ol>
       </div>
-      <div className="brew">
-        <div className="col">
-          <fieldset className="tabs" aria-label="Brew method">
-            {METHOD_ORDER.map((k) => (
-              <label className="tab" key={k}>
-                <input type="radio" name="method" checked={key === k} onChange={() => selectMethod(k)} />
-                <span>{METHODS[k].label}</span>
-              </label>
-            ))}
-          </fieldset>
-          <div className={`fx draw${fading ? " fading" : ""}`} aria-hidden="true">
-            {METHOD_ORDER.map((k) => (
-              <svg
-                key={k}
-                className={`d${k === key ? " on" : ""}`}
-                data-m={k}
-                viewBox="0 0 200 220"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={3}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                dangerouslySetInnerHTML={{ __html: BREW_ART[k] }}
-              />
-            ))}
+
+      <div className="brew2">
+        <div className="brew-left">
+          <div className={`brew-art fx${fading ? " fading" : ""}`} aria-hidden="true">
+            <p className="lab brew-art-lab">{m.label}</p>
+            <div className="draw">
+              {METHOD_ORDER.map((k) => (
+                <svg
+                  key={k}
+                  className={`d${k === key ? " on" : ""}`}
+                  data-m={k}
+                  viewBox="0 0 200 220"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2.6}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  dangerouslySetInnerHTML={{ __html: BREW_ART[k] }}
+                />
+              ))}
+            </div>
+            <p className="brew-art-cap">
+              {m.grind} · {m.time}
+            </p>
           </div>
         </div>
 
-        <div className={`col fx${fading ? " fading" : ""}`} aria-live="polite">
-          <p className="lab dim">Coffee to water, by weight</p>
-          <p className="disp ratio">{key === "moka" ? "1 pot" : m.ratio ? `1:${m.ratio}` : "—"}</p>
-          {m.fixed ? (
-            <p className="lead">{m.fixed}</p>
-          ) : (
-            <div className="calc">
-              <p className="lab">How much water?</p>
-              <p className="hint">Drag the slider or tap a size. We will work out how much coffee to weigh.</p>
-              <div className="presets" role="group" aria-label="Quick sizes">
-                {PRESETS.map((p) => (
-                  <button
-                    key={p.w}
-                    className="pbtn"
-                    type="button"
-                    aria-pressed={water === p.w}
-                    onClick={() => setWater(p.w)}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-              <label className="lab dim" htmlFor="water">
-                Water: <span>{water}</span> ml
+        <div className="brew-right">
+          <fieldset className="opts brew-methods">
+            <legend className="lab dim">Your brewer</legend>
+            {METHOD_ORDER.map((k) => (
+              <label className="chip q-chip" key={k}>
+                <input type="radio" name="method" checked={key === k} onChange={() => selectMethod(k)} />
+                <span>
+                  <svg
+                    viewBox="0 0 32 32"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2.4}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                    dangerouslySetInnerHTML={{ __html: QUIZ_METHOD_ICON[k] }}
+                  />
+                  {METHODS[k].label}
+                </span>
               </label>
-              <input
-                type="range"
-                id="water"
-                min={150}
-                max={750}
-                step={50}
-                value={water}
-                onChange={(e) => setWater(Number(e.target.value))}
-              />
-              <div className="scale lab dim" aria-hidden="true">
-                <span>150 ml</span>
-                <span>450 ml</span>
-                <span>750 ml</span>
-              </div>
-              <div className="nums">
-                <span>
-                  <span className="lab dim">Coffee</span>
-                  <b>{coffee.toFixed(1)} g</b>
-                </span>
-                <span>
-                  <span className="lab dim">Water</span>
-                  <b>{water} g</b>
-                </span>
-              </div>
-              <p className="cline">
-                Weigh {coffee.toFixed(1)} g of coffee, then pour in {water} g of water (about {water} ml).
-              </p>
-            </div>
-          )}
-        </div>
+            ))}
+          </fieldset>
 
-        <BrewTimer key={key} method={key} />
+          <div className={`brew-calc fx${fading ? " fading" : ""}`} aria-live="polite">
+            <p className="lab dim">Coffee to water, by weight</p>
+            <p className="disp ratio">{key === "moka" ? "1 pot" : m.ratio ? `1:${m.ratio}` : "—"}</p>
+            {m.fixed ? (
+              <p className="lead">{m.fixed}</p>
+            ) : (
+              <div className="calc">
+                <p className="lab">How much water?</p>
+                <div className="presets" role="group" aria-label="Quick sizes">
+                  {PRESETS.map((p) => (
+                    <button
+                      key={p.w}
+                      className="pbtn"
+                      type="button"
+                      aria-pressed={water === p.w}
+                      onClick={() => setWater(p.w)}
+                    >
+                      <span>{p.cups}</span>
+                      <span className="pml">
+                        <i aria-hidden="true"> · </i>
+                        {p.w} ml
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                <label className="lab dim" htmlFor="water">
+                  Water: <span>{water}</span> ml
+                </label>
+                <input
+                  type="range"
+                  id="water"
+                  min={150}
+                  max={750}
+                  step={50}
+                  value={water}
+                  onChange={(e) => setWater(Number(e.target.value))}
+                />
+                <div className="scale lab dim" aria-hidden="true">
+                  <span>150 ml</span>
+                  <span>450 ml</span>
+                  <span>750 ml</span>
+                </div>
+                <div className="nums">
+                  <span>
+                    <span className="lab dim">Coffee</span>
+                    <b>{coffee.toFixed(1)} g</b>
+                  </span>
+                  <span>
+                    <span className="lab dim">Water</span>
+                    <b>{water} g</b>
+                  </span>
+                </div>
+                <p className="cline">
+                  Weigh {coffee.toFixed(1)} g of coffee, then pour in {water} g of water (about {water} ml).
+                </p>
+              </div>
+            )}
+          </div>
+
+          <BrewTimer key={key} method={key} />
+        </div>
       </div>
     </section>
   );
@@ -229,16 +277,6 @@ function BrewTimer({ method }: { method: MethodKey }) {
 
   return (
     <div className="col fx">
-      <div className="facts">
-        <div>
-          <p className="lab dim">Grind</p>
-          <p style={{ margin: "6px 0 0" }}>{m.grind}</p>
-        </div>
-        <div>
-          <p className="lab dim">Brew time</p>
-          <p style={{ margin: "6px 0 0" }}>{m.time}</p>
-        </div>
-      </div>
       <div className="timer">
         <div>
           <p className="lab dim">Timer</p>
