@@ -909,3 +909,16 @@ body:has(.admin-shell),body:has(.no-pat-page){background-image:none}
   .brewpage .pml{opacity:.75;font-size:11px}
 }
 .pbtn i{font-style:normal}
+
+/* No double-tap zoom on touch screens (see noZoomScript in layout.tsx). */
+html{touch-action:manipulation}
+/* Big titles: a little more room between lines so two-line titles don't touch. */
+.disp.h2{line-height:1.02}
+@media (max-width:640px){.disp.h2{line-height:1.06}}
+/* Product facts (Origin): label and value side by side, e.g. "Estate: Darjeeling". */
+.facts-dl{margin:0;display:flex;flex-direction:column}
+.facts-dl>div{display:grid;grid-template-columns:minmax(96px,32%) minmax(0,1fr);gap:12px;align-items:baseline;padding:9px 0;border-bottom:1px dashed var(--line)}
+.facts-dl>div:last-child{border-bottom:0}
+.facts-dl dt{font:600 12px/1.4 var(--f-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.facts-dl dt::after{content:":"}
+.facts-dl dd{margin:0}
