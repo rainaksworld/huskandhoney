@@ -38,3 +38,9 @@ export const FOOTER_NAV = [
   { href: "/privacy", label: "Privacy" },
   { href: "/terms", label: "Terms" },
 ];
+
+/** The footer's links, in two labelled groups. */
+export const FOOTER_GROUPS = [
+  { title: "Explore", links: NAV },
+  { title: "Help", links: FOOTER_NAV.slice(NAV.length) },
+];
