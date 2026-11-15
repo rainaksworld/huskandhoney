@@ -956,3 +956,31 @@ html{touch-action:manipulation}
   .foot-contact{font-size:13px}
   .foot-legal{flex-direction:column;gap:6px}
 }
+
+/* Footer: compact pass (about 30% shorter). */
+.foot::before{height:clamp(12px,1.6vw,20px);background-size:clamp(24px,3.2vw,40px) clamp(24px,3.2vw,40px)}
+.foot{padding:calc(clamp(18px,2.6vw,32px) + clamp(12px,1.6vw,20px)) var(--gut) calc(clamp(14px,1.6vw,20px) + env(safe-area-inset-bottom,0px))}
+.foot-in{row-gap:clamp(16px,2vw,24px)}
+.foot-brand{gap:12px}
+.foot-id{flex-direction:row;align-items:center;gap:14px}
+.foot .pill{padding:8px 14px}
+.foot .logo{width:clamp(72px,6.4vw,92px)}
+.foot-id .lab{font-size:11px;line-height:1.35;max-width:16ch}
+.foot-contact{gap:2px;font-size:13px;line-height:1.45}
+.foot-contact i{font-style:normal;opacity:.6}
+.foot-h{margin-bottom:8px}
+.foot-grp ul{gap:6px}
+.foot-grp a{font-size:11.5px}
+.foot-news .notify{gap:6px}
+.foot-news .notify input{padding-top:6px;padding-bottom:6px}
+.foot-legal{padding-top:12px;gap:2px 24px}
+.foot-legal .legal{font-size:10.5px;line-height:1.5}
+@media (max-width:640px){
+  .foot-in{gap:18px}
+  .foot-nav{gap:16px}
+  .foot-grp ul{gap:7px}
+  .foot-small{display:none}
+}
+.foot-grp li{font-size:11.5px;line-height:1.3}
+@media (max-width:1000px){.foot-small{display:none}}
+@media (max-width:640px){.foot-in{gap:14px}.foot-nav{margin-top:2px}}

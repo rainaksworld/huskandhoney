@@ -15,8 +15,11 @@ export function Footer() {
           </div>
           <address className="foot-contact">
             <span>{SITE.address}</span>
-            <a href={SITE.phoneHref}>{SITE.phoneDisplay}</a>
-            <a href={`mailto:${SITE.email}`}>{SITE.email}</a>
+            <span>
+              <a href={SITE.phoneHref}>{SITE.phoneDisplay}</a>
+              <i aria-hidden="true"> · </i>
+              <a href={`mailto:${SITE.email}`}>{SITE.email}</a>
+            </span>
             <span>{SITE.hours}</span>
           </address>
         </div>
@@ -42,9 +45,8 @@ export function Footer() {
         </div>
 
         <div className="foot-legal">
-          <p className="legal">© 2026 Husk &amp; Honey, Siliguri.</p>
           <p className="legal">
-            FSSAI Lic. No. {SITE.fssai} · GSTIN {SITE.gstin}
+            © 2026 Husk &amp; Honey, Siliguri · FSSAI Lic. No. {SITE.fssai} · GSTIN {SITE.gstin}
           </p>
           <p className="legal foot-note">{SITE.placeholderNote}</p>
         </div>
