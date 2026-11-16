@@ -984,3 +984,7 @@ html{touch-action:manipulation}
 .foot-grp li{font-size:11.5px;line-height:1.3}
 @media (max-width:1000px){.foot-small{display:none}}
 @media (max-width:640px){.foot-in{gap:14px}.foot-nav{margin-top:2px}}
+
+/* Home hero logo: sharp vector (HeroLogo.tsx) instead of the 320 px animated picture. */
+.hero-logo.hero-logo-svg{display:block;height:auto;aspect-ratio:640/405;background:none;-webkit-mask:none;mask:none;overflow:visible}
+.hero-logo-ink{fill:var(--blue)}

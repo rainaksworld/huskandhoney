@@ -2,6 +2,7 @@
 /* eslint-disable */
 // @ts-nocheck — ported verbatim from the static site's scroll-driven pour; kept as-is to preserve the motion exactly.
 import Link from "next/link";
+import { HeroLogo } from "./HeroLogo";
 import { useEffect } from "react";
 
 export function PourHero() {
@@ -89,7 +90,7 @@ export function PourHero() {
     <div className="hero-top">
       <p className="lab">Coffee. Food. A little time well spent.</p>
       <h1 className="sr">Husk &amp; Honey</h1>
-      <div className="logo hero-logo" role="img" aria-label="Husk and Honey"></div>
+      <HeroLogo />
       <div className="hero-cta">
         <Link className="btn btn-fill" href="/shop?c=coffee">Shop coffee</Link>
         <Link className="btn btn-ghost" href="/shop?c=kits">Starter kits</Link>
