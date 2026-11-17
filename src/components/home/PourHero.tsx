@@ -30,22 +30,33 @@ export function PourHero() {
     }
     if (reduce) scene.jump(1);
 
+    const total = () => track.offsetHeight - 2 * window.innerHeight;
+    const lockY = () => track.getBoundingClientRect().top + window.scrollY + total();
     const progress = () => {
-      const r = track.getBoundingClientRect();
-      const total = r.height - 2 * window.innerHeight;
-      return total > 0 ? Math.min(1, Math.max(0, -r.top / total)) : 0;
+      const t = total();
+      return t > 0 ? Math.min(1, Math.max(0, -track.getBoundingClientRect().top / t)) : 0;
     };
+    // Hold the page on the hero until the pour has finished, so the next
+    // section doesn't slide in over a half-poured cup. Only applies once the
+    // visitor has been in the hero (not when they arrive on a #link lower down).
+    let armed = !window.location.hash && window.scrollY <= lockY();
     let ticking = false;
+    const update = () => {
+      ticking = false;
+      const p = progress();
+      if (!reduce) scene?.setProgress(p);
+      if (pctRef.current) pctRef.current.textContent = String(Math.round(p * 100));
+      if (hintRef.current) hintRef.current.style.opacity = String(Math.max(0, 1 - p / 0.06));
+    };
     const onScroll = () => {
+      const ly = lockY();
+      if (window.scrollY < ly - 1) armed = true;
+      if (!reduce && armed && scene && !scene.isDone() && window.scrollY > ly + 1) {
+        window.scrollTo({ top: ly, behavior: "instant" });
+      }
       if (ticking) return;
       ticking = true;
-      requestAnimationFrame(() => {
-        ticking = false;
-        const p = progress();
-        if (!reduce) scene?.setProgress(p);
-        if (pctRef.current) pctRef.current.textContent = String(Math.round(p * 100));
-        if (hintRef.current) hintRef.current.style.opacity = String(Math.max(0, 1 - p / 0.06));
-      });
+      requestAnimationFrame(update);
     };
     let lastW = canvas.clientWidth;
     const onResize = () => {
@@ -55,7 +66,7 @@ export function PourHero() {
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onResize);
     if (!reduce) scene.jump(progress());
-    onScroll();
+    update();
     return () => {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);

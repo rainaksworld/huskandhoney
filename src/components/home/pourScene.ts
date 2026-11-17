@@ -753,9 +753,10 @@ export function createPourScene(canvas, opts) {
   draw();
 
   return {
-    setProgress(p) { const v = clamp(p, 0, 1); if (v !== progress) { progress = v; wake(); } },
+    setProgress(p) { const v = p > 0.99 ? 1 : clamp(p, 0, 1); if (v !== progress) { progress = v; wake(); } },
     jump(p) { progress = clamp(p, 0, 1); render(progress * END); },
     resize() { fit(); buildHandle(); draw(); },
+    isDone() { return T >= END - 0.2; },
     stop() { alive = false; cancelAnimationFrame(raf); }
   };
 }

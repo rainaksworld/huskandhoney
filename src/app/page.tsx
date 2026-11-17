@@ -61,8 +61,8 @@ export default function Home() {
     </div>
     <div className="story-right rv">
       <figure className="hills">
-        <img src="/img/photos/darjeeling-hills.webp" alt="Green hills and tea gardens of Darjeeling under a cloudy sky" loading="lazy" />
-        <figcaption><span>Coffee, among the tea</span><small>Photo: Dipankar Bailung, Unsplash</small></figcaption>
+        <img src="/img/photos/darjeeling-hills.webp" alt="Snow-capped Himalayan peaks above the Darjeeling hills" loading="lazy" />
+        <figcaption><span>The Darjeeling hills</span></figcaption>
       </figure>
       <ol className="seq2">
         <li><span className="when now">Now</span><p>Beans and grounds, packed for how you brew.</p></li>
