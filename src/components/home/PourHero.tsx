@@ -7,15 +7,17 @@ import { createPourScene } from "./pourScene";
 
 /**
  * Home hero. As the visitor scrolls, a gooseneck kettle pours water into a
- * pour-over dripper and coffee drips into a glass Husk & Honey mug. The
- * animation follows the scroll: scroll faster and it plays faster, scroll
- * back and it runs backwards.
+ * pour-over dripper and coffee drips into a glass Husk & Honey mug on a
+ * coffee scale. The pour follows the scroll at a calm pace, the page waits
+ * until the cup is ready, and a gentle nudge appears if the visitor stops
+ * scrolling mid-brew.
  */
 export function PourHero() {
   const trackRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pctRef = useRef<HTMLSpanElement>(null);
   const hintRef = useRef<HTMLParagraphElement>(null);
+  const nudgeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const track = trackRef.current;
@@ -24,7 +26,7 @@ export function PourHero() {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let scene: ReturnType<typeof createPourScene> | null = null;
     try {
-      scene = createPourScene(canvas, { logoPath: LOGO_PATH, logoColor: "#678BC7" });
+      scene = createPourScene(canvas, { logoPath: LOGO_PATH, logoColor: "#678BC7", scale: true });
     } catch {
       return;
     }
@@ -40,6 +42,14 @@ export function PourHero() {
     // section doesn't slide in over a half-poured cup. Only applies once the
     // visitor has been in the hero (not when they arrive on a #link lower down).
     let armed = !window.location.hash && window.scrollY <= lockY();
+    // "Scroll a bit more to finish brewing": only for someone who started
+    // scrolling, then stopped before the cup was ready.
+    let started = false, lastScroll = 0;
+    const showNudge = (on: boolean) => nudgeRef.current?.classList.toggle("on", on);
+    const nudgeTimer = window.setInterval(() => {
+      if (!scene || reduce) return;
+      showNudge(armed && started && !scene.isDone() && scene.isIdle() && Date.now() - lastScroll > 1500 && window.scrollY >= track.offsetTop);
+    }, 300);
     let ticking = false;
     const update = () => {
       ticking = false;
@@ -50,6 +60,9 @@ export function PourHero() {
     };
     const onScroll = () => {
       const ly = lockY();
+      lastScroll = Date.now();
+      if (window.scrollY > 4) started = true;
+      showNudge(false);
       if (window.scrollY < ly - 1) armed = true;
       if (!reduce && armed && scene && !scene.isDone() && window.scrollY > ly + 1) {
         window.scrollTo({ top: ly, behavior: "instant" });
@@ -71,6 +84,7 @@ export function PourHero() {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
       scene?.stop();
+      window.clearInterval(nudgeTimer);
     };
   }, []);
 
@@ -109,6 +123,9 @@ export function PourHero() {
             <path d="M70 120l20-32 10 14 10-14 20 32z" fill="#678BC7" stroke="#678BC7" strokeWidth="5" strokeLinejoin="round" />
             <ellipse cx="100" cy="72" rx="9" ry="6" fill="#4B682F" transform="rotate(-25 100 72)" />
           </svg>
+          <div className="pour-nudge" ref={nudgeRef} role="status" aria-live="polite">
+            <span aria-hidden="true">↓</span>Scroll a bit more to finish brewing
+          </div>
         </div>
 
         <ul className="hero-facts" aria-label="Why Husk and Honey">

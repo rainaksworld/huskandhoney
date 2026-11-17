@@ -1106,3 +1106,10 @@ body{font-size:clamp(16px,1.12vw,22px)}
 #range .cat-strip h3{font-size:clamp(30px,3vw,80px)}
 /* product pages: the top block sits directly in <main>, so give it the same space as sections */
 main>.reveal.prod{padding:clamp(104px,13vh,136px) var(--gut) clamp(40px,6vw,80px)}
+/* "Scroll a bit more to finish brewing" nudge */
+.pour-nudge{position:absolute;z-index:3;left:47%;top:70%;display:flex;align-items:center;gap:clamp(8px,.8vw,14px);padding:clamp(9px,.8vw,14px) clamp(14px,1.3vw,22px) clamp(9px,.8vw,14px) clamp(9px,.8vw,14px);border-radius:999px;background:#1E2A15;color:#F6EEDF;font:600 clamp(12.5px,.95vw,18px)/1.2 var(--f-ui);letter-spacing:.02em;white-space:nowrap;box-shadow:0 10px 24px rgba(30,42,21,.25);opacity:0;transform:translateY(10px) scale(.96);transition:opacity .35s,transform .45s cubic-bezier(.2,.8,.2,1.2);pointer-events:none}
+.pour-nudge.on{opacity:1;transform:none}
+.pour-nudge span{display:inline-flex;align-items:center;justify-content:center;width:clamp(24px,1.9vw,34px);height:clamp(24px,1.9vw,34px);border-radius:50%;background:#F0E2B3;color:#1E2A15;font-weight:700;animation:nudge-bob 1.1s ease-in-out infinite}
+@keyframes nudge-bob{0%,100%{transform:translateY(-2px)}50%{transform:translateY(3px)}}
+@media (max-width:760px){.pour-nudge{left:50%;top:2%;transform:translate(-50%,10px)}.pour-nudge.on{transform:translate(-50%,0)}}
+@media (prefers-reduced-motion:reduce){.pour-nudge span{animation:none}}

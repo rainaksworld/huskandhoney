@@ -1,8 +1,9 @@
 /* eslint-disable */
 // @ts-nocheck
 /* Realistic pour for the home hero: a gooseneck kettle pours water into a
- * dripper and coffee drips into a glass mug. Falling water and drips follow
- * real gravity; the brew itself is sped up. Driven by scroll progress (0..1). */
+ * dripper on a glass mug standing on a coffee scale. Falling water and drips
+ * follow real gravity; the brew itself is sped up. Driven by scroll progress
+ * (0..1); once the cup is ready, steam keeps rising in real time. */
 export function createPourScene(canvas, opts) {
   opts = Object.assign({ scroll: true }, opts);
   opts = opts || {};
@@ -18,10 +19,10 @@ export function createPourScene(canvas, opts) {
   fit();
 
   // ---------- world (1 cm = S px; gravity is real) ----------
-  const S = 19;
+  const S = opts.scale ? 17.6 : 19;
   const G = 981 * S;
   const PI = Math.PI;
-  const CX = 236, FLOOR = 664;
+  const CX = 236, FLOOR = opts.scale ? 604 : 664;
   const eAt = (y) => 0.2 + 0.1 * (y / H);           // camera ~15° above the table
   const MUG = { ro: 4.2 * S, ri: 3.9 * S, h: 9.6 * S, base: 0.9 * S };
   MUG.top = FLOOR - MUG.h;
@@ -35,7 +36,12 @@ export function createPourScene(canvas, opts) {
   const SLOPE = (5.8 - 2.6) / 6.8;
 
   // brewing: 20 g coffee holds ~36 ml; drawdown time constant; brew clock runs K× (the falling water is real time)
-  const HOLD = 36, TAU = 8, K = 6.6;
+  const SHORT = opts.timeline === 'short';
+  const TL = SHORT
+    ? { a0: 0.3, a1: 1.0, b1: 1.8, c1: 2.1, d1: 2.7, e1: 3.0, f1: 6.4, g1: 7.0, lift: 7.1, end: 10, clock: 26 }
+    : { a0: 0.7, a1: 1.6, b1: 2.7, c1: 3.1, d1: 4.6, e1: 5.1, f1: 10.9, g1: 11.9, lift: 12, end: 17, clock: 16 };
+  const HOLD = 36, TAU = SHORT ? 5 : 8, K = SHORT ? 9.6 : 6.6;
+  const SPEED = opts.mode === 'speed';
   const SPOUT_R = 0.21, CD = 0.8; // spout opening radius (cm), discharge coefficient
 
   // kettle drawn in cm, body-bottom-centre origin
@@ -58,27 +64,32 @@ export function createPourScene(canvas, opts) {
 
   function pose(t) {
     let th = 0, x = REST.x, y = REST.y;
-    if (t >= 0.7 && t < 1.6) { const u = ease((t - 0.7) / 0.9); x = lerp(REST.x, POUR.x, u); y = lerp(REST.y, POUR.y, u); th = 29.5 * u; }
-    else if (t >= 1.6 && t < 10.9) {
+    const L = TL;
+    if (t >= L.a0 && t < L.a1) { const u = ease((t - L.a0) / (L.a1 - L.a0)); x = lerp(REST.x, POUR.x, u); y = lerp(REST.y, POUR.y, u); th = 29.5 * u; }
+    else if (t >= L.a1 && t < L.f1) {
       x = POUR.x; y = POUR.y;
-      if (t < 2.7) th = 29.5;
-      else if (t < 3.1) th = lerp(29.5, 16, ease((t - 2.7) / 0.4));
-      else if (t < 4.6) th = 16;
-      else if (t < 5.1) th = lerp(16, 33, ease((t - 4.6) / 0.5));
+      if (t < L.b1) th = 29.5;
+      else if (t < L.c1) th = lerp(29.5, 16, ease((t - L.b1) / (L.c1 - L.b1)));
+      else if (t < L.d1) th = 16;
+      else if (t < L.e1) th = lerp(16, 33, ease((t - L.d1) / (L.e1 - L.d1)));
       else th = 33;
-      const amp = (0.45 * win(t, 1.6, 2.9, 0.3) + 0.9 * win(t, 4.9, 10.9, 0.4)) * S;
-      const w = 2 * PI * (t - 1.6) / 1.3;
+      const amp = (0.45 * win(t, L.a1, L.b1 + 0.2, 0.3) + 0.9 * win(t, L.d1 + 0.3, L.f1, 0.4)) * S;
+      const w = 2 * PI * (t - L.a1) / 1.3;
       x += amp * Math.sin(w);
       y += amp * 0.25 * Math.cos(w);
-    } else if (t >= 10.9 && t < 11.9) { const u = ease((t - 10.9) / 1.0); x = lerp(POUR.x, REST.x, u); y = lerp(POUR.y, REST.y, u); th = 33 * (1 - u); }
+    } else if (t >= L.f1 && t < L.g1) { const u = ease((t - L.f1) / (L.g1 - L.f1)); x = lerp(POUR.x, REST.x, u); y = lerp(POUR.y, REST.y, u); th = 33 * (1 - u); }
     return { th, x, y };
   }
+  // scroll-speed mode: the pose clock moves with scrolling and the tilt follows how fast you scroll
+  let Tp = 0, gain = 0, gainTarget = 0;
+  // fun extras: nudge wiggle, pointer lean, end bounce
+  let wiggleAt = -10, lean = 0, leanTarget = 0, poured = 0;
 
   // ---------- state ----------
   let T, water, coffee, splash, ripples, bubbles, steam, waterSeg, coffeeSeg, pouring, dripping, dropReal, dropVol;
   let held, vFree, vMug, wet, lifting, fadeStart, lastTip, tipNow, kPos, theta, flowQ, exitV, impactV, impactW, qOut, lastRipple;
   function reset() {
-    seed = 11; T = 0;
+    seed = 11; T = 0; Tp = 0; gain = 0; poured = 0;
     water = []; coffee = []; splash = []; ripples = []; bubbles = []; steam = [];
     waterSeg = 0; coffeeSeg = 0; pouring = false; dripping = 0; dropReal = 0; dropVol = 0;
     held = 0; vFree = 0; vMug = 0; wet = 0; lifting = -1; fadeStart = -1; lastRipple = -1;
@@ -102,7 +113,9 @@ export function createPourScene(canvas, opts) {
   const DT = 1 / 240;
   function step() {
     T += DT;
-    const p = pose(T);
+    if (SPEED) gain += (gainTarget - gain) * Math.min(1, DT * 6);
+    const p = pose(SPEED ? Tp : T);
+    if (SPEED && p.th > 0) p.th = p.th * (0.6 + 0.42 * gain);
     placeKettle(p);
     const tip = { x: p.x, y: p.y };
     const tv = { x: (tip.x - lastTip.x) / DT, y: (tip.y - lastTip.y) / DT };
@@ -125,6 +138,7 @@ export function createPourScene(canvas, opts) {
         let v = w.q * DT * K;
         const vc = Math.hypot(w.vx, w.vy) / S;
         impactV = vc; impactW = 2 * Math.sqrt(w.q / (PI * vc)) * 10;
+        poured += v;
         if (held < HOLD) { const take = Math.min(HOLD - held, v); held += take; v -= take; }
         vFree += v; wet = 1;
         water.splice(i, 1);
@@ -166,11 +180,11 @@ export function createPourScene(canvas, opts) {
     for (let i = ripples.length - 1; i >= 0; i--) if (T - ripples[i].t > 1.2) ripples.splice(i, 1);
 
     // bloom: CO2 bubbles on the wet bed
-    if (wet && T > 1.7 && T < 5.4 && rnd() < 0.09) bubbles.push({ u: (rnd() - 0.5) * 1.5, v: rnd(), t: T, life: 0.5 + rnd() * 1.1, r: 0.6 + rnd() * 1.8 });
+    if (wet && T > TL.a1 + 0.1 && T < TL.e1 + 0.3 && rnd() < 0.09) bubbles.push({ u: (rnd() - 0.5) * 1.5, v: rnd(), t: T, life: 0.5 + rnd() * 1.1, r: 0.6 + rnd() * 1.8 });
     for (let i = bubbles.length - 1; i >= 0; i--) if (T - bubbles[i].t > bubbles[i].life) bubbles.splice(i, 1);
 
     // lift the dripper once the drips have slowed
-    if (lifting < 0 && T > 12 && qOut < 0.25) lifting = T;
+    if (lifting < 0 && (SPEED ? Tp : T) > TL.lift && qOut < 0.25) lifting = T;
     if (lifting >= 0 && T - lifting > 0.05) vFree = 0;
 
     // steam
@@ -193,6 +207,10 @@ export function createPourScene(canvas, opts) {
   const sprite = document.createElement('canvas');
   sprite.width = sprite.height = 64;
   (() => { const g = sprite.getContext('2d'); const r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(0.45, 'rgba(255,255,255,.55)'); r.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = r; g.fillRect(0, 0, 64, 64); })();
+  // a soft warm-grey haze so steam reads against the cream background
+  const haze = document.createElement('canvas');
+  haze.width = haze.height = 64;
+  (() => { const g = haze.getContext('2d'); const r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, 'rgba(96,104,80,1)'); r.addColorStop(0.5, 'rgba(96,104,80,.45)'); r.addColorStop(1, 'rgba(96,104,80,0)'); g.fillStyle = r; g.fillRect(0, 0, 64, 64); })();
 
   const logoCv = document.createElement('canvas');
   const LOGO_W = 5.4 * S, LOGO_H = LOGO_W * 405 / 640;
@@ -543,14 +561,19 @@ export function createPourScene(canvas, opts) {
   }
 
   function drawSteam() {
+    const outer = ctx.globalAlpha;
     for (const s of steam) {
       const u = s.age / s.life;
       const a = Math.sin(PI * Math.min(1, u * 1.25)) * 0.34 * s.k * (1 - u * 0.4);
-      const r = s.r0 + u * 34;
-      ctx.globalAlpha = a;
-      ctx.drawImage(sprite, s.x - r, s.y - r * 1.3, r * 2, r * 2.6);
+      const r = s.r0 + u * 26;
+      const base = ctx.globalAlpha;
+      ctx.globalAlpha = a * 0.45;
+      ctx.drawImage(haze, s.x - r * 0.8, s.y - r * 1.4, r * 1.6, r * 2.8);
+      ctx.globalAlpha = a * 0.9;
+      ctx.drawImage(sprite, s.x - r * 0.55, s.y - r * 1.15, r * 1.1, r * 2.2);
+      ctx.globalAlpha = base;
     }
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = outer;
   }
 
   // matte black gooseneck kettle (drawn in cm)
@@ -578,8 +601,11 @@ export function createPourScene(canvas, opts) {
 
   function drawKettle() {
     ctx.save();
-    ctx.translate(kPos.x, kPos.y);
-    ctx.rotate(-theta * PI / 180);
+    const wAge = (performance.now() - wiggleAt) / 1000;
+    const wig = wAge < 1.2 ? 4 * Math.sin(wAge * 34) * Math.exp(-wAge * 4) : 0;
+    const restK = 1 - clamp(theta / 18, 0, 1);
+    ctx.translate(kPos.x + lean * 3 * restK, kPos.y);
+    ctx.rotate((-theta - lean * restK + wig) * PI / 180);
     ctx.translate(-BC.x * S, -BC.y * S);
     ctx.scale(S, S);
     const lw = 1 / S;
@@ -646,6 +672,50 @@ export function createPourScene(canvas, opts) {
     ctx.restore();
   }
 
+  function drawScale() {
+    const w = 7.8 * S, top = FLOOR, e = eAt(FLOOR), d = w * e * 0.62, h = 1.9 * S;
+    // shadow on the table
+    ctx.beginPath(); ctx.ellipse(CX + 20, top + d + h + 4, w * 1.08, 12, 0, 0, 2 * PI);
+    ctx.fillStyle = 'rgba(30,42,21,.2)'; ctx.fill();
+    // top plate (seen from above), then the front face
+    const r = 10;
+    ctx.beginPath();
+    ctx.moveTo(CX - w + r, top - d); ctx.lineTo(CX + w - r, top - d); ctx.quadraticCurveTo(CX + w, top - d, CX + w, top - d + r);
+    ctx.lineTo(CX + w, top + d - r); ctx.quadraticCurveTo(CX + w, top + d, CX + w - r, top + d);
+    ctx.lineTo(CX - w + r, top + d); ctx.quadraticCurveTo(CX - w, top + d, CX - w, top + d - r);
+    ctx.lineTo(CX - w, top - d + r); ctx.quadraticCurveTo(CX - w, top - d, CX - w + r, top - d); ctx.closePath();
+    const tg = ctx.createLinearGradient(0, top - d, 0, top + d); tg.addColorStop(0, '#4a4c50'); tg.addColorStop(1, '#2c2e31');
+    ctx.fillStyle = tg; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(CX - w + r, top - d + 1.5); ctx.lineTo(CX + w - r, top - d + 1.5);
+    ctx.strokeStyle = 'rgba(255,255,255,.22)'; ctx.lineWidth = 1.2; ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(CX - w, top + d - r); ctx.lineTo(CX - w, top + d + h - r); ctx.quadraticCurveTo(CX - w, top + d + h, CX - w + r, top + d + h);
+    ctx.lineTo(CX + w - r, top + d + h); ctx.quadraticCurveTo(CX + w, top + d + h, CX + w, top + d + h - r); ctx.lineTo(CX + w, top + d - r);
+    ctx.quadraticCurveTo(CX + w, top + d, CX + w - r, top + d); ctx.lineTo(CX - w + r, top + d); ctx.quadraticCurveTo(CX - w, top + d, CX - w, top + d - r); ctx.closePath();
+    ctx.fillStyle = hgrad(CX - w, CX + w, [[0, '#1d1e20'], [0.3, '#2c2d30'], [1, '#141516']]); ctx.fill();
+    // display
+    const dw = 7.6 * S, dh = 1.25 * S, dx = CX - dw / 2, dy = top + d + (h - dh) / 2;
+    ctx.fillStyle = '#0c100a'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(dx, dy, dw, dh, 4) : ctx.rect(dx, dy, dw, dh); ctx.fill();
+    const g = Math.round(poured), secs = Math.round(clockSecs());
+    ctx.fillStyle = '#F0E2B3'; ctx.font = '600 ' + Math.round(dh * 0.6) + 'px Menlo, Consolas, monospace'; ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left'; ctx.fillText(Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0'), dx + 9, dy + dh / 2 + 1);
+    ctx.textAlign = 'right'; ctx.fillText(g + ' g', dx + dw - 9, dy + dh / 2 + 1);
+    ctx.textAlign = 'start';
+  }
+  function clockSecs() {
+    const t = SPEED ? Tp : T;
+    const stopAt = lifting >= 0 ? lifting : Infinity;
+    return Math.max(0, (Math.min(t, stopAt) - TL.a1)) * TL.clock;
+  }
+  function phase() {
+    const t = SPEED ? Tp : T;
+    if (lifting >= 0) return T - lifting > 1.1 ? 'done' : 'drip';
+    if (t < TL.a0 + 0.1) return 'ready';
+    if (t < TL.d1) return 'bloom';
+    if (t < TL.f1) return 'pour';
+    return 'drip';
+  }
+
   // ---------- frame ----------
   function draw() {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -655,12 +725,17 @@ export function createPourScene(canvas, opts) {
     else if (!opts.scroll && T < 0.4) alpha = clamp(T / 0.4, 0, 1);
     if (opts.still) alpha = 1;
     ctx.globalAlpha = alpha;
+    if (opts.scale) drawScale();
     drawShadows();
+    const doneAge = lifting >= 0 ? T - lifting - 1.15 : -1;
+    const bounce = opts.settle && doneAge > 0 ? -9 * Math.exp(-doneAge * 4.5) * Math.abs(Math.sin(doneAge * 11)) : 0;
+    ctx.save(); ctx.translate(0, bounce);
     drawMugBack();
     drawCoffeeInMug();
     drawRibbon(coffee, false);
     for (const s of splash) { ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 2 * PI); ctx.fillStyle = 'rgba(84,40,13,.9)'; ctx.fill(); }
     drawMugFront();
+    ctx.restore();
     const da = dripAlpha();
     if (da > 0.001) {
       ctx.save(); ctx.globalAlpha = alpha * da; ctx.translate(0, dripOff());
@@ -698,7 +773,7 @@ export function createPourScene(canvas, opts) {
   // ---------- run ----------
   reset();
   buildHandle();
-  const END = 17;
+  const END = TL.end;
   let raf = 0, last = 0, progress = 0, alive = true, busy = false;
   // Snapshots every half second make scrolling back cheap: restore the nearest
   // earlier snapshot and simulate forward from there.
@@ -746,10 +821,47 @@ export function createPourScene(canvas, opts) {
       t = T + d;
     }
     render(t);
+    info();
     if (Math.abs(target - T) > DT * 2) raf = requestAnimationFrame(frame);
-    else busy = false;
+    else { busy = false; startAmbient(); }
   }
-  function wake() { if (!busy && alive) { busy = true; last = 0; raf = requestAnimationFrame(frame); } }
+  // scroll-speed mode: physics always runs in real time; scrolling winds the clock and sets the tilt
+  let vel = 0;
+  function frameSpeed(now) {
+    if (!alive) { busy = false; return; }
+    const dt = last ? Math.min(0.05, (now - last) / 1000) : 0.016; last = now;
+    vel *= Math.exp(-dt / 0.18);
+    gainTarget = clamp(vel / 900, 0, 1.25);
+    if (lifting < 0) Tp = Math.min(TL.end, Tp + Math.min(1.6, 0.25 + gainTarget * 1.3) * dt * (gainTarget > 0.03 || (Tp > TL.f1) ? 1 : 0));
+    const target = T + dt;
+    while (T < target) step();
+    draw();
+    info();
+    if (!(lifting >= 0 && T - lifting > 6)) raf = requestAnimationFrame(frameSpeed); else busy = false;
+  }
+  let infoT = 0;
+  function info() {
+    if (!opts.onFrame) return;
+    const n = performance.now(); if (n - infoT < 100) return; infoT = n;
+    opts.onFrame({ phase: phase(), grams: Math.round(poured), secs: Math.round(clockSecs()), progress: clamp(T / END, 0, 1), done: SPEED ? phase() === 'done' : T >= END - 0.2 });
+  }
+  // once the cup is ready, steam keeps rising in real time even though the scroll has stopped
+  let amb = 0, ambLast = 0;
+  function startAmbient() { if (!amb && alive && T >= END - 0.25) { ambLast = 0; amb = requestAnimationFrame(ambient); } }
+  function ambient(now) {
+    if (!alive || busy || T < END - 0.25) { amb = 0; return; }
+    const dt = ambLast ? Math.min(0.05, (now - ambLast) / 1000) : 0.016; ambLast = now;
+    if (rnd() < 24 * dt) steam.push(puff(CX + (rnd() - 0.5) * MUG.ri * 1.2, MUG.top + 4, 1.15));
+    for (let i = steam.length - 1; i >= 0; i--) {
+      const p = steam[i];
+      p.age += dt;
+      p.x += (p.vx + Math.sin(p.age * p.f + p.ph) * 9) * dt; p.y += p.vy * dt;
+      if (p.age > p.life) steam.splice(i, 1);
+    }
+    draw();
+    amb = requestAnimationFrame(ambient);
+  }
+  function wake() { if (!busy && alive) { busy = true; last = 0; raf = requestAnimationFrame(SPEED ? frameSpeed : frame); } }
   reset();
   buildHandle();
   draw();
@@ -758,7 +870,17 @@ export function createPourScene(canvas, opts) {
     setProgress(p) { const v = p > 0.99 ? 1 : clamp(p, 0, 1); if (v !== progress) { progress = v; wake(); } },
     jump(p) { progress = clamp(p, 0, 1); render(progress * END); },
     resize() { fit(); buildHandle(); draw(); },
-    isDone() { return T >= END - 0.2; },
+    isIdle() { return !busy; },
+    isDone() { return SPEED ? phase() === 'done' : T >= END - 0.2; },
+    push(dy) { if (dy > 0) { vel += dy * 6; wake(); } },
+    wiggle() {
+      if (performance.now() - wiggleAt < 900) return;
+      wiggleAt = performance.now();
+      if (SPEED) { wake(); return; }
+      const loop = () => { if (!alive) return; draw(); if (performance.now() - wiggleAt < 1200) requestAnimationFrame(loop); };
+      requestAnimationFrame(loop);
+    },
+    setPointer(nx) { leanTarget = clamp(nx, -1, 1) * 5; lean += (leanTarget - lean) * 0.25; draw(); },
     stop() { alive = false; cancelAnimationFrame(raf); }
   };
 }
