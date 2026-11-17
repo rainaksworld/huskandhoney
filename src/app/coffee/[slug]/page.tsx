@@ -3,6 +3,9 @@ import { notFound } from "next/navigation";
 import { COFFEES, getCoffee } from "@/lib/catalogue";
 import { CoffeeBuy } from "@/components/product/CoffeeBuy";
 
+// Two fixed coffees: render on the server and let navigation wait for it.
+export const instant = false;
+
 export function generateStaticParams() {
   return COFFEES.map((c) => ({ slug: c.slug }));
 }

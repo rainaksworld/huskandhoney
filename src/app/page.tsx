@@ -7,19 +7,32 @@ export default function Home() {
     <>
       <PourHero />
 <section className="sec t-honey over-hero" id="shop" aria-labelledby="shop-h">
-  <div className="page-head rv"><p className="lab dim">Shop</p><h2 className="disp h2" id="shop-h">coffee first. everything to brew it.</h2><div><Link className="btn btn-fill" href="/find">Not sure? Find your coffee</Link></div></div>
-  <article className="pack-card rv" aria-labelledby="pack-h">
-    <figure className="pack-img"><img src="/img/kits.jpg" alt="Packaging concept: three Husk and Honey coffee bags in cream, blue and green" loading="lazy" /><figcaption>Packaging concept</figcaption></figure>
-    <div className="pack-txt">
-      <p className="lab dim">Two estates, two coffees</p>
-      <h2 className="disp h3" id="pack-h">from the estate to your cup.</h2>
-      <p className="pack-intro">Our coffee comes from two estates. Each one is roasted light, medium or dark, and packed as whole beans or ground for the way you brew.</p>
-      <div className="estates">
-        <div className="estate"><p className="lab">Darjeeling Specialty</p><p className="est-n">Darjeeling</p><p className="est-d">From the Darjeeling estate. Tasting notes coming soon.</p><Link className="crumb" href="/coffee/arabica-01">Shop Darjeeling Specialty →</Link></div>
-        <div className="estate"><p className="lab">Kalebung Specialty</p><p className="est-n">Kalebung</p><p className="est-d">From the Kalebung estate. Light is floral and citrusy, medium is caramel and milk chocolate, dark is cocoa and smoky.</p><Link className="crumb" href="/coffee/arabica-02">Shop Kalebung Specialty →</Link></div>
+  <div className="shop-intro">
+    <div className="shop-txt rv">
+      <p className="lab dim">Shop</p>
+      <h2 className="disp h2" id="shop-h">coffee first. everything to brew it.</h2>
+      <p className="shop-lead">In the Darjeeling hills, nearly every slope grows tea. Our two estates grow coffee, which makes every bag a rare find. Our roasters taste the hills in it: a soft, tea-like note behind the coffee. A small indulgence from very few trees.</p>
+      <div className="est-cards">
+        <article className="est-card">
+          <p className="lab est-k">Rare estate</p>
+          <h3 className="est-n">Darjeeling</h3>
+          <p className="est-d">One of the very few coffee estates among Darjeeling&apos;s tea gardens. Delicate, with a hint of tea on the finish.</p>
+          <Link className="crumb" href="/coffee/arabica-01">Shop Darjeeling Specialty →</Link>
+        </article>
+        <article className="est-card">
+          <p className="lab est-k">Rare estate</p>
+          <h3 className="est-n">Kalebung</h3>
+          <p className="est-d">Coffee from a hillside known for tea. Floral to cocoa across three roasts, each with a soft tea-like finish.</p>
+          <Link className="crumb" href="/coffee/arabica-02">Shop Kalebung Specialty →</Link>
+        </article>
       </div>
+      <div><Link className="btn btn-fill" href="/find">Not sure? Find your coffee</Link></div>
     </div>
-  </article>
+    <figure className="shop-ph rv">
+      <img src="/img/kits.jpg" alt="Packaging concept: three Husk and Honey coffee bags in cream, blue and green" loading="lazy" />
+      <figcaption>Packaging concept</figcaption>
+    </figure>
+  </div>
 </section>
 <section className="sec" id="range" aria-labelledby="range-h">
   <div className="range-head rv">
@@ -27,9 +40,9 @@ export default function Home() {
     <p className="range-help">Not sure where to start? <Link href="/find">Answer 3 questions and we&apos;ll pick your coffee →</Link></p>
   </div>
   <div className="cats">
-    <Link className="cat k-blue rv" href="/shop?c=coffee"><svg className="art" viewBox="0 0 240 190" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{__html:"<path d=\"M78 34h84l10 20v104a8 8 0 0 1-8 8H76a8 8 0 0 1-8-8V54z\" fill=\"rgba(255,255,255,.35)\"/><path d=\"M68 54h104M96 34v-8h48v8\"/><circle cx=\"120\" cy=\"104\" r=\"20\"/><path d=\"M110 96c8 6 12 10 20 16\" />"}} /><span className="for">Already brewing at home</span><p className="lab">Coffee</p><h3 className="disp">beans and grounds.</h3><p>Darjeeling Specialty and Kalebung Specialty, packed for how you brew.</p><ul className="facts"><li>2 estates</li><li>3 roasts</li><li>5 grinds</li><li>250 g or 500 g</li></ul><span className="pfrom">From {formatINR(COFFEE_PRICE["250"])}</span><span className="go">Shop coffee <i aria-hidden="true">→</i></span></Link>
-    <Link className="cat k-olive rv" href="/shop?c=kits"><svg className="art" viewBox="0 0 240 190" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{__html:"<path d=\"M30 52h100l-34 52H64z\" fill=\"rgba(255,255,255,.3)\"/><path d=\"M54 64l16 36M80 60v42M106 64l-16 36\"/><rect x=\"58\" y=\"112\" width=\"44\" height=\"46\" rx=\"9\"/><rect x=\"138\" y=\"96\" width=\"56\" height=\"62\" rx=\"10\" fill=\"rgba(255,255,255,.3)\"/><path d=\"M194 112c18 0 18 30 0 30\"/><path d=\"M20 168h190\"/>"}} /><span className="for">New to brewing</span><p className="lab">Starter kits</p><h3 className="disp">start brewing.</h3><p>A brewer, a mug and coffee in one box.</p><ul className="facts"><li>French press</li><li>V60</li><li>Moka pot</li></ul><span className="pfrom">Price at launch</span><span className="go">See the kits <i aria-hidden="true">→</i></span></Link>
-    <Link className="cat k-honey rv" href="/shop?c=equipment"><svg className="art" viewBox="0 0 240 190" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{__html:"<path d=\"M78 76h80l8 66a10 10 0 0 1-10 12H80a10 10 0 0 1-10-12z\" fill=\"rgba(255,255,255,.35)\"/><path d=\"M88 76q30-26 60 0\"/><circle cx=\"118\" cy=\"56\" r=\"5\"/><path d=\"M74 134c-28 0-40-34-48-62\"/><path d=\"M164 88c34-6 34 50 0 46\"/>"}} /><span className="for">Upgrading your setup</span><p className="lab">Equipment</p><h3 className="disp">brew gear.</h3><p>Everything to go with the coffee, one piece at a time.</p><ul className="facts"><li>Grinder</li><li>Kettle</li><li>Scale</li><li>Brewers</li><li>Filters</li><li>Mug</li></ul><span className="pfrom">Prices at launch</span><span className="go">Browse equipment <i aria-hidden="true">→</i></span></Link>
+    <Link className="cat k-blue rv" href="/shop?c=coffee"><span className="cat-ph bags" aria-hidden="true"><img src="/img/coffee/bag-light.webp" alt="" loading="lazy" /><img src="/img/coffee/bag-dark.webp" alt="" loading="lazy" /><img src="/img/coffee/bag-medium.webp" alt="" loading="lazy" /></span><span className="for">Already brewing at home</span><p className="lab">Coffee</p><h3 className="disp">beans and grounds.</h3><p>Two rare estates, packed for how you brew.</p><ul className="facts"><li>2 estates</li><li>3 roasts</li><li>5 grinds</li><li>250 g or 500 g</li></ul><span className="pfrom">From {formatINR(COFFEE_PRICE["250"])}</span><span className="go">Shop coffee <i aria-hidden="true">→</i></span></Link>
+    <Link className="cat k-olive rv" href="/shop?c=kits"><span className="cat-ph"><img src="/img/bags.jpg" alt="Starter box concept with coffee, a mug and a French press" loading="lazy" /></span><span className="for">New to brewing</span><p className="lab">Starter kits</p><h3 className="disp">start brewing.</h3><p>A brewer, a mug and coffee in one box.</p><ul className="facts"><li>French press</li><li>V60</li><li>Moka pot</li></ul><span className="pfrom">Price at launch</span><span className="go">See the kits <i aria-hidden="true">→</i></span></Link>
+    <Link className="cat k-honey rv" href="/shop?c=equipment"><span className="cat-ph"><img src="/img/photos/pour-over-gear.webp" alt="A gooseneck kettle pouring water into a pour-over dripper over a glass server on a scale" loading="lazy" /></span><span className="for">Upgrading your setup</span><p className="lab">Equipment</p><h3 className="disp">brew gear.</h3><p>Everything to go with the coffee, one piece at a time.</p><ul className="facts"><li>Grinder</li><li>Kettle</li><li>Scale</li><li>Brewers</li><li>Filters</li><li>Mug</li></ul><span className="pfrom">Prices at launch</span><span className="go">Browse equipment <i aria-hidden="true">→</i></span></Link>
   </div>
   <Link className="cat-strip k-navy rv" href="/brew">
     <div className="col"><p className="lab">Brew guide · free</p><h3 className="disp">brew it your way.</h3><p>Pick a method, set your cup size and get the coffee weight, grind, time and steps.</p></div>
@@ -46,10 +59,16 @@ export default function Home() {
       <ul className="chain" aria-label="From mountain to moment"><li>Mountain</li><li>Bean</li><li>Roast</li><li>Cup</li><li>Moment</li></ul>
       <div><Link className="btn btn-fill" href="/story">Read the story</Link></div>
     </div>
-    <div className="seq rv">
-      <div><p className="lab now">Now</p><p>Beans and grounds, packed for how you brew.</p></div>
-      <div><p className="lab dim">Next</p><p>The café in Pradhan Nagar, Siliguri, with coffee and food.</p></div>
-      <div><p className="lab dim">Later</p><p>Brewing sessions and small gatherings for people who like a good cup.</p></div>
+    <div className="story-right rv">
+      <figure className="hills">
+        <img src="/img/photos/darjeeling-hills.webp" alt="Green hills and tea gardens of Darjeeling under a cloudy sky" loading="lazy" />
+        <figcaption><span>Coffee, among the tea</span><small>Photo: Dipankar Bailung, Unsplash</small></figcaption>
+      </figure>
+      <ol className="seq2">
+        <li><span className="when now">Now</span><p>Beans and grounds, packed for how you brew.</p></li>
+        <li><span className="when">Next</span><p>The café in Pradhan Nagar, Siliguri, with coffee and food.</p></li>
+        <li><span className="when">Later</span><p>Brewing sessions and small gatherings for people who like a good cup.</p></li>
+      </ol>
     </div>
   </div>
 </section>
