@@ -73,10 +73,10 @@ export function Enhancements() {
     }
     const start = performance.now();
     const hide = () => boot.classList.add("out");
-    const later = () => setTimeout(hide, Math.max(0, 1600 - (performance.now() - start)));
+    const later = () => setTimeout(hide, Math.max(0, 900 - (performance.now() - start)));
     if (document.readyState === "complete") later();
     else window.addEventListener("load", later, { once: true });
-    const cap = setTimeout(hide, 3200);
+    const cap = setTimeout(hide, 2000);
     return () => clearTimeout(cap);
   }, []);
 

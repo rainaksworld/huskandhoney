@@ -690,11 +690,11 @@ body.has-addbar .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 @media (max-width:560px){#grid[data-layout="list"] .pcard .tile{width:110px}#grid[data-layout="list"] .pcard p{display:none}#grid[data-layout="showcase"] .cell:not(.feat) .pcard .pt{padding:10px 12px 14px}}
 
 /* --- animated logo (from the loading animation) --- */
-.hero-logo,.nav-logo,.pill .logo{-webkit-mask:none;mask:none;background:url("/assets/logo-anim.webp") center/contain no-repeat;aspect-ratio:320/207}
+.hero-logo,.nav-logo,.pill .logo{-webkit-mask:none;mask:none;background:url("/assets/logo-static.svg") center/contain no-repeat;aspect-ratio:320/207}
 @media (prefers-reduced-motion:reduce){.hero-logo,.nav-logo,.pill .logo{background-image:url("/assets/logo-still.png")}}
 .boot{position:fixed;inset:0;z-index:300;background:#F0E2B3;display:grid;place-items:center;transition:opacity .5s ease;animation:bootOut .5s ease 3.4s forwards}
 .boot.out{opacity:0;pointer-events:none}
-.boot-logo{width:min(70vw,420px);aspect-ratio:320/207;background:url("/assets/logo-big.webp") center/contain no-repeat}
+.boot-logo{width:min(70vw,420px);aspect-ratio:320/207;background:url("/assets/logo-static.svg") center/contain no-repeat}
 .hh-seen .boot{display:none}
 @keyframes bootOut{to{opacity:0;visibility:hidden}}
 @media (prefers-reduced-motion:reduce){.boot-logo{background-image:url("/assets/logo-still.png")}}
@@ -716,7 +716,7 @@ body.has-addbar .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 html.zoomed{overflow:hidden}
 @media print{.boot,.zoom{display:none!important}}
 
-.hero-logo{background-image:url("/assets/logo-big.webp")}
+.hero-logo{background-image:url("/assets/logo-static.svg")}
 @media (prefers-reduced-motion:reduce){.hero-logo{background-image:url("/assets/logo-still.png")}}
 @media (max-width:700px){
   .zoom{padding-left:0;padding-right:0}
@@ -1113,3 +1113,6 @@ main>.reveal.prod{padding:clamp(104px,13vh,136px) var(--gut) clamp(40px,6vw,80px
 @keyframes nudge-bob{0%,100%{transform:translateY(-2px)}50%{transform:translateY(3px)}}
 @media (max-width:760px){.pour-nudge{left:50%;top:2%;transform:translate(-50%,10px)}.pour-nudge.on{transform:translate(-50%,0)}}
 @media (prefers-reduced-motion:reduce){.pour-nudge span{animation:none}}
+/* static logo everywhere (sharp vector, tiny file) instead of the animated webp */
+.hero-logo,.nav-logo,.pill .logo,.boot-logo{background-image:url("/assets/logo-static.svg")}
+.boot{animation-delay:2.2s}

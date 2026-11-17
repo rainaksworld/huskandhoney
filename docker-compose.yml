@@ -15,7 +15,10 @@ services:
       retries: 10
 
   app:
-    build: .
+    build:
+      context: .
+      args:
+        SITE_URL: ${SITE_URL:-https://huskandhoney.in}
     restart: unless-stopped
     depends_on:
       db:

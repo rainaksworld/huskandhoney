@@ -11,6 +11,10 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+# Pages are pre-built, so the site address must be known at build time for
+# share previews (Open Graph / Twitter images) to point at the real domain.
+ARG SITE_URL=https://huskandhoney.in
+ENV SITE_URL=$SITE_URL
 RUN npm run build
 
 FROM node:22-alpine AS runner
