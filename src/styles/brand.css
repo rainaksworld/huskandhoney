@@ -1104,3 +1104,5 @@ body{font-size:clamp(16px,1.12vw,22px)}
 .est-n{font-size:clamp(24px,2.2vw,56px)}
 #range .cat h3{font-size:clamp(34px,3.4vw,88px)}
 #range .cat-strip h3{font-size:clamp(30px,3vw,80px)}
+/* product pages: the top block sits directly in <main>, so give it the same space as sections */
+main>.reveal.prod{padding:clamp(104px,13vh,136px) var(--gut) clamp(40px,6vw,80px)}
