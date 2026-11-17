@@ -36,11 +36,13 @@ export function createPourScene(canvas, opts) {
   const SLOPE = (5.8 - 2.6) / 6.8;
 
   // brewing: 20 g coffee holds ~36 ml; drawdown time constant; brew clock runs K× (the falling water is real time)
-  const SHORT = opts.timeline === 'short';
+  const SHORT = opts.timeline === 'short', TRIM = opts.timeline === 'trim';
   const TL = SHORT
     ? { a0: 0.3, a1: 1.0, b1: 1.8, c1: 2.1, d1: 2.7, e1: 3.0, f1: 6.4, g1: 7.0, lift: 7.1, end: 10, clock: 26 }
+    : TRIM
+    ? { a0: 0.6, a1: 1.5, b1: 2.6, c1: 3.0, d1: 3.7, e1: 4.2, f1: 8.4, g1: 9.3, lift: 9.4, end: 13.8, clock: 19 }
     : { a0: 0.7, a1: 1.6, b1: 2.7, c1: 3.1, d1: 4.6, e1: 5.1, f1: 10.9, g1: 11.9, lift: 12, end: 17, clock: 16 };
-  const HOLD = 36, TAU = SHORT ? 5 : 8, K = SHORT ? 9.6 : 6.6;
+  const HOLD = 36, TAU = SHORT ? 5 : TRIM ? 7 : 8, K = SHORT ? 9.6 : TRIM ? 8.4 : 6.6;
   const SPEED = opts.mode === 'speed';
   const SPOUT_R = 0.21, CD = 0.8; // spout opening radius (cm), discharge coefficient
 
