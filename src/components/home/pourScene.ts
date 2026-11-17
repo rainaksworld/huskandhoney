@@ -741,6 +741,8 @@ export function createPourScene(canvas, opts) {
       let d = diff * (1 - Math.exp(-dt / EASE));
       const capF = MAX_FWD * dt, capB = MAX_BACK * dt;
       if (d > capF) d = capF; else if (d < -capB) d = -capB;
+      // never creep in steps smaller than one physics tick, or the scene stalls just short of the target
+      if (Math.abs(d) < DT * 1.5) d = Math.abs(diff) < DT * 1.5 ? diff : Math.sign(diff) * DT * 1.5;
       t = T + d;
     }
     render(t);
