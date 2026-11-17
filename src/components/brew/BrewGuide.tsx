@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { METHODS, type MethodKey } from "@/lib/catalogue";
-import { BREW_ART } from "@/lib/brew-art";
+import { BrewAnim } from "./BrewAnim";
 import { QUIZ_METHOD_ICON } from "@/lib/quiz-art";
 
 const METHOD_ORDER: MethodKey[] = ["pour", "french", "moka", "aero", "espresso"];
@@ -85,20 +85,7 @@ export function BrewGuide() {
           <div className={`brew-art fx${fading ? " fading" : ""}`} aria-hidden="true">
             <p className="lab brew-art-lab">{m.label}</p>
             <div className="draw">
-              {METHOD_ORDER.map((k) => (
-                <svg
-                  key={k}
-                  className={`d${k === key ? " on" : ""}`}
-                  data-m={k}
-                  viewBox="0 0 200 220"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2.6}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  dangerouslySetInnerHTML={{ __html: BREW_ART[k] }}
-                />
-              ))}
+              <BrewAnim key={key} method={key} />
             </div>
             <p className="brew-art-cap">
               {m.grind} · {m.time}

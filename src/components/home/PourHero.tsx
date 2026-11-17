@@ -26,7 +26,7 @@ export function PourHero() {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let scene: ReturnType<typeof createPourScene> | null = null;
     try {
-      scene = createPourScene(canvas, { logoPath: LOGO_PATH, logoColor: "#678BC7", scale: true });
+      scene = createPourScene(canvas, { logoPath: LOGO_PATH, logoColor: "#678BC7", scale: true, timeline: "trim" });
     } catch {
       return;
     }

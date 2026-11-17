@@ -1116,3 +1116,7 @@ main>.reveal.prod{padding:clamp(104px,13vh,136px) var(--gut) clamp(40px,6vw,80px
 /* static logo everywhere (sharp vector, tiny file) instead of the animated webp */
 .hero-logo,.nav-logo,.pill .logo,.boot-logo{background-image:url("/assets/logo-static.svg")}
 .boot{animation-delay:2.2s}
+/* brew guide: lifelike animations (canvas) in the honey box */
+.brew-art .draw{display:grid;place-items:center}
+.brew-cv{display:block;width:100%;height:100%;transition:opacity .4s}
+.brew-cv.wide{height:auto;aspect-ratio:8/7}
