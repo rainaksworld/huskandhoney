@@ -700,18 +700,49 @@ export function createPourScene(canvas, opts) {
   buildHandle();
   const END = 17;
   let raf = 0, last = 0, progress = 0, alive = true, busy = false;
+  // Snapshots every half second make scrolling back cheap: restore the nearest
+  // earlier snapshot and simulate forward from there.
+  const snaps = [];
+  function save() {
+    return JSON.parse(JSON.stringify({ T, water, coffee, splash, ripples, bubbles, steam, waterSeg, coffeeSeg, pouring, dripping, dropReal, dropVol, held, vFree, vMug, wet, lifting, fadeStart, lastTip, tipNow, kPos, theta, flowQ, exitV, impactV, impactW, qOut, lastRipple, seed }));
+  }
+  function load(o) {
+    o = JSON.parse(JSON.stringify(o));
+    ({ T, water, coffee, splash, ripples, bubbles, steam, waterSeg, coffeeSeg, pouring, dripping, dropReal, dropVol, held, vFree, vMug, wet, lifting, fadeStart, lastTip, tipNow, kPos, theta, flowQ, exitV, impactV, impactW, qOut, lastRipple, seed } = o);
+  }
+  function advance(t) {
+    while (T < t) {
+      step();
+      const k = Math.floor(T * 2);
+      if (k > 0 && !snaps[k] && T - k / 2 < DT * 1.5) snaps[k] = save();
+    }
+  }
   function render(t) {
-    if (t > T + DT) { while (T < t) step(); }
-    else if (t < T - DT) { reset(); while (T < t) step(); }
+    if (t > T + DT) advance(t);
+    else if (t < T - DT) {
+      let k = Math.min(snaps.length - 1, Math.floor(t * 2));
+      while (k > 0 && !snaps[k]) k--;
+      if (k > 0) load(snaps[k]); else reset();
+      advance(t);
+    }
     draw();
   }
+  // Controlled playback: the scene eases toward the scroll position and never
+  // runs faster than MAX_FWD x real time (MAX_BACK x when scrolling back), so a
+  // quick flick of the wheel plays as a calm pour instead of a jump.
+  const MAX_FWD = 1.6, MAX_BACK = 3.2, EASE = 0.28;
   function frame(now) {
     if (!alive) { busy = false; return; }
     const dt = last ? Math.min(0.05, (now - last) / 1000) : 0.016; last = now;
     const target = progress * END;
     const diff = target - T;
     let t = target;
-    if (Math.abs(diff) > DT * 2) t = T + diff * (1 - Math.exp(-dt / 0.09));
+    if (Math.abs(diff) > DT * 2) {
+      let d = diff * (1 - Math.exp(-dt / EASE));
+      const capF = MAX_FWD * dt, capB = MAX_BACK * dt;
+      if (d > capF) d = capF; else if (d < -capB) d = -capB;
+      t = T + d;
+    }
     render(t);
     if (Math.abs(target - T) > DT * 2) raf = requestAnimationFrame(frame);
     else busy = false;
