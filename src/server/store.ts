@@ -17,6 +17,14 @@ export const SettingsSchema = z.object({
   lowStockAt: z.number().int().min(0).max(1000),
   /** Set once the owner has reviewed the shipping rule in the admin. */
   shippingConfirmed: z.boolean(),
+  /** Added to the coffee's own weight for the courier's shipment weight (box + padding, grams). */
+  packagingWeightGrams: z.number().int().min(0).max(5000),
+  /** Shipment box size for the courier, in centimetres. */
+  boxLengthCm: z.number().int().min(1).max(200),
+  boxWidthCm: z.number().int().min(1).max(200),
+  boxHeightCm: z.number().int().min(1).max(200),
+  /** Weight (grams) assumed for a kit/equipment line, which has no known weight yet. */
+  defaultItemWeightGrams: z.number().int().min(1).max(20000),
 });
 export type Settings = z.infer<typeof SettingsSchema>;
 
@@ -25,6 +33,11 @@ export const DEFAULT_SETTINGS: Settings = {
   freeShippingOver: null,
   lowStockAt: 10,
   shippingConfirmed: false,
+  packagingWeightGrams: 150,
+  boxLengthCm: 20,
+  boxWidthCm: 15,
+  boxHeightCm: 8,
+  defaultItemWeightGrams: 400,
 };
 
 export async function getSettings(): Promise<Settings> {

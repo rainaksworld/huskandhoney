@@ -29,6 +29,13 @@
       "when": 1794919523439,
       "tag": "0003_sign_in_options_and_coupons",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794986417113,
+      "tag": "0004_delhivery_courier_fields",
+      "breakpoints": true
     }
   ]
 }

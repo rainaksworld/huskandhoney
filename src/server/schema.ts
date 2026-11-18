@@ -129,6 +129,18 @@ export const ORDER_STATUSES = [
 ] as const;
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
+export const COURIER_STATUSES = [
+  "created",
+  "manifested",
+  "in_transit",
+  "out_for_delivery",
+  "delivered",
+  "rto",
+  "cancelled",
+  "failed",
+] as const;
+export type CourierStatus = (typeof COURIER_STATUSES)[number];
+
 export const orders = pgTable(
   "orders",
   {
@@ -158,6 +170,13 @@ export const orders = pgTable(
     providerPaymentId: text("provider_payment_id"),
     stockApplied: boolean("stock_applied").notNull().default(false),
     trackingNote: text("tracking_note"),
+    /** Delhivery's shipment id (AWB). Set automatically once booked. */
+    courierWaybill: text("courier_waybill"),
+    /** created | manifested | in_transit | out_for_delivery | delivered | rto | cancelled | failed */
+    courierStatus: text("courier_status").$type<CourierStatus>(),
+    /** What Delhivery said when booking failed, so the owner can fix it and retry. */
+    courierError: text("courier_error"),
+    courierUpdatedAt: timestamp("courier_updated_at", { withTimezone: true }),
     /** Buyer opted in to WhatsApp order updates and offers at checkout. */
     whatsappOptIn: boolean("whatsapp_opt_in").notNull().default(false),
     /** Set when the buyer was logged in at checkout. Guest orders stay null. */

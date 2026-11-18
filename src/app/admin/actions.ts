@@ -12,6 +12,8 @@ import { SettingsSchema, saveSettings } from "@/server/store";
 import { setStock } from "@/server/store";
 import { notifyOrderStatus } from "@/server/notify";
 import { CouponFormSchema, createCoupon, setCouponActive } from "@/server/coupons";
+import { getOrderAdmin } from "@/server/orders";
+import { autoBookShipment, checkServiceability, delhiveryEnabled, trackShipment } from "@/server/delhivery";
 
 export type FormResult = { ok: boolean; message: string };
 
@@ -84,6 +86,69 @@ export async function updateOrder(_: FormResult | null, form: FormData): Promise
 }
 
 /* ------------------------------------------------------------------ */
+/* Courier (Delhivery)                                                 */
+/* ------------------------------------------------------------------ */
+
+/** Books (or re-books) the shipment for a paid order. Used for the first automatic attempt's retry. */
+export async function retryShipment(_: FormResult | null, form: FormData): Promise<FormResult> {
+  if (!(await isAdmin())) return { ok: false, message: "Session expired. Please log in again." };
+  if (!delhiveryEnabled()) return { ok: false, message: "Delhivery isn't set up yet - see docs/delhivery-setup.md." };
+  const orderId = z.string().uuid().safeParse(form.get("orderId"));
+  if (!orderId.success) return { ok: false, message: "We couldn't find that order." };
+
+  const found = await getOrderAdmin(orderId.data);
+  if (!found) return { ok: false, message: "We couldn't find that order." };
+
+  await autoBookShipment(found.order, found.items);
+  refresh();
+  const after = await getOrderAdmin(orderId.data);
+  if (after?.order.courierStatus === "failed") {
+    return { ok: false, message: after.order.courierError ?? "Delhivery couldn't book this shipment." };
+  }
+  return { ok: true, message: `Shipment booked. Waybill ${after?.order.courierWaybill ?? ""}.` };
+}
+
+/** Pulls the latest status from Delhivery for an order that already has a waybill. */
+export async function refreshTracking(_: FormResult | null, form: FormData): Promise<FormResult> {
+  if (!(await isAdmin())) return { ok: false, message: "Session expired. Please log in again." };
+  const orderId = z.string().uuid().safeParse(form.get("orderId"));
+  if (!orderId.success) return { ok: false, message: "We couldn't find that order." };
+
+  const found = await getOrderAdmin(orderId.data);
+  if (!found?.order.courierWaybill) return { ok: false, message: "This order has no shipment yet." };
+
+  const result = await trackShipment(found.order.courierWaybill);
+  if (!result.ok) return { ok: false, message: result.error };
+
+  const db = await getDb();
+  await db
+    .update(schema.orders)
+    .set({ courierStatus: result.status, courierUpdatedAt: sql`now()` })
+    .where(eq(schema.orders.id, orderId.data));
+  refresh();
+  return { ok: true, message: `Tracking updated: ${result.detail}` };
+}
+
+/** Checks a pincode against Delhivery - a quick way to confirm the token and account are working. */
+export async function testDelhiveryConnection(_: FormResult | null, form: FormData): Promise<FormResult> {
+  if (!(await isAdmin())) return { ok: false, message: "Session expired. Please log in again." };
+  const pincode = z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/)
+    .safeParse(form.get("pincode"));
+  if (!pincode.success) return { ok: false, message: "Enter a 6-digit pincode." };
+
+  const result = await checkServiceability(pincode.data);
+  if (!result.ok) return { ok: false, message: result.error };
+  if (!result.serviceable) return { ok: false, message: "Connected, but Delhivery doesn't deliver to that pincode." };
+  return {
+    ok: true,
+    message: `Connected. Delhivery serves ${pincode.data} (${result.prepaid ? "prepaid" : "no prepaid"}${result.cod ? ", COD" : ""}).`,
+  };
+}
+
+/* ------------------------------------------------------------------ */
 /* Stock                                                                */
 /* ------------------------------------------------------------------ */
 
@@ -117,6 +182,11 @@ export async function updateStock(_: FormResult | null, form: FormData): Promise
 const SettingsFormSchema = z.object({
   shippingFee: z.coerce.number().int().min(0).max(100000),
   lowStockAt: z.coerce.number().int().min(0).max(1000),
+  packagingWeightGrams: z.coerce.number().int().min(0).max(5000),
+  boxLengthCm: z.coerce.number().int().min(1).max(200),
+  boxWidthCm: z.coerce.number().int().min(1).max(200),
+  boxHeightCm: z.coerce.number().int().min(1).max(200),
+  defaultItemWeightGrams: z.coerce.number().int().min(1).max(20000),
 });
 
 export async function updateSettings(_: FormResult | null, form: FormData): Promise<FormResult> {
@@ -126,6 +196,11 @@ export async function updateSettings(_: FormResult | null, form: FormData): Prom
   const parsed = SettingsFormSchema.safeParse({
     shippingFee: form.get("shippingFee"),
     lowStockAt: form.get("lowStockAt"),
+    packagingWeightGrams: form.get("packagingWeightGrams"),
+    boxLengthCm: form.get("boxLengthCm"),
+    boxWidthCm: form.get("boxWidthCm"),
+    boxHeightCm: form.get("boxHeightCm"),
+    defaultItemWeightGrams: form.get("defaultItemWeightGrams"),
   });
   if (!parsed.success) return { ok: false, message: "Please check the values and try again." };
 
@@ -134,6 +209,11 @@ export async function updateSettings(_: FormResult | null, form: FormData): Prom
     freeShippingOver: freeOverRaw === "" ? null : Number(freeOverRaw),
     lowStockAt: parsed.data.lowStockAt,
     shippingConfirmed: true, // saving from this form counts as reviewing it
+    packagingWeightGrams: parsed.data.packagingWeightGrams,
+    boxLengthCm: parsed.data.boxLengthCm,
+    boxWidthCm: parsed.data.boxWidthCm,
+    boxHeightCm: parsed.data.boxHeightCm,
+    defaultItemWeightGrams: parsed.data.defaultItemWeightGrams,
   });
   if (!next.success) return { ok: false, message: "Please check the values and try again." };
 

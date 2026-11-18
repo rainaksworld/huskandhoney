@@ -6,6 +6,7 @@ import { orderNumber } from "@/server/orders";
 import { getOrderForBuyer } from "@/server/orders";
 import { formatINR } from "@/lib/catalogue";
 import { STATUS_LABEL } from "@/lib/order-status";
+import { publicTrackingUrl } from "@/server/delhivery";
 
 export const metadata: Metadata = { title: "Your order" };
 
@@ -66,6 +67,21 @@ export default async function OrderPage({
               <p>{order.note}</p>
             </>
           )}
+          {order.courierWaybill && (
+            <>
+              <p className="lab" style={{ marginTop: 20 }}>
+                Shipping
+              </p>
+              <p>
+                Tracking number {order.courierWaybill}
+                <br />
+                <a href={publicTrackingUrl(order.courierWaybill)} target="_blank" rel="noopener noreferrer">
+                  Track this package →
+                </a>
+              </p>
+            </>
+          )}
+
           <p className="legal" style={{ marginTop: 16 }}>
             Questions about this order? <Link href="/contact">Contact us</Link> with order number {number}.
           </p>

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { getSettings } from "@/server/store";
 import { SettingsForm } from "@/components/admin/SettingsForm";
+import { DelhiveryTestForm } from "@/components/admin/DelhiveryTestForm";
+import { delhiveryEnabled } from "@/server/delhivery";
 import { connection } from "next/server";
 
 export const metadata: Metadata = { title: "Settings", robots: { index: false, follow: false } };
@@ -13,6 +15,7 @@ export default async function AdminSettingsPage() {
     <div className="col rv">
       <h1 className="disp h2">settings.</h1>
       <SettingsForm settings={settings} />
+      <DelhiveryTestForm enabled={delhiveryEnabled()} />
     </div>
   );
 }

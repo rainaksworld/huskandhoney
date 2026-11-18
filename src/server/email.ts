@@ -183,6 +183,24 @@ export async function sendLoginCodeEmail(email: string, code: string) {
   });
 }
 
+/** Tells the owner that Delhivery's automatic shipment booking failed for a paid order, so a human can fix it and retry. */
+export async function sendShipmentFailedEmail(o: Pick<OrderLike, "id" | "seq">, error: string) {
+  const site = process.env.SITE_URL ?? "";
+  const owner = process.env.OWNER_EMAIL;
+  if (!owner) return { sent: false as const };
+  const number = orderNumber(o.seq);
+  return sendMail({
+    to: owner,
+    subject: `Shipment booking failed for order ${number}`,
+    text: [
+      `Delhivery didn't book a shipment for order ${number} automatically.`,
+      `What it said: ${error}`,
+      "The order is still paid and safe - open it in admin to check the address and retry the shipment.",
+      site ? `${site}/admin/orders/${o.id}` : "",
+    ].join("\n\n"),
+  });
+}
+
 /** A logistics update (packed/shipped/delivered/cancelled) after the order's own confirmation email. */
 export async function sendStatusEmail(
   o: Pick<OrderLike, "id" | "seq" | "accessToken" | "name" | "email">,

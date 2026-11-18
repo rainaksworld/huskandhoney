@@ -13,6 +13,7 @@ import {
 } from "@/server/orders";
 import { activeProvider, sandboxSign, verifyCheckoutSignature } from "@/server/payments";
 import { notifyOrderPaid } from "@/server/notify";
+import { autoBookShipment } from "@/server/delhivery";
 import { getCurrentUser } from "@/server/accounts";
 import { evaluateCoupon } from "@/server/coupons";
 import { eq } from "drizzle-orm";
@@ -157,6 +158,7 @@ export async function confirmPayment(input: {
     const db = await getDb();
     const items = await db.select().from(schema.orderItems).where(eq(schema.orderItems.orderId, paid.id));
     await notifyOrderPaid(paid, items);
+    await autoBookShipment(paid, items);
   }
   return { ok: true, orderId: paid.id, token: paid.accessToken };
 }

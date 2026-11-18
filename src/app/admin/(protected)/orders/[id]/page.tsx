@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { getOrderAdmin, orderNumber } from "@/server/orders";
 import { formatINR } from "@/lib/catalogue";
 import { OrderStatusForm } from "@/components/admin/OrderStatusForm";
+import { CourierPanel } from "@/components/admin/CourierPanel";
+import { delhiveryEnabled } from "@/server/delhivery";
 import { whatsappLink, whatsappStatusText } from "@/server/whatsapp";
 import { connection } from "next/server";
 
@@ -54,6 +56,17 @@ export default async function AdminOrderPage({ params }: { params: Promise<{ id:
             Update order
           </p>
           <OrderStatusForm orderId={order.id} status={order.status} trackingNote={order.trackingNote} />
+
+          {order.status !== "pending_payment" && order.status !== "payment_failed" && (
+            <CourierPanel
+              orderId={order.id}
+              waybill={order.courierWaybill}
+              status={order.courierStatus}
+              error={order.courierError}
+              updatedAt={order.courierUpdatedAt}
+              enabled={delhiveryEnabled()}
+            />
+          )}
 
           {waText && (
             <div className="wa-send">

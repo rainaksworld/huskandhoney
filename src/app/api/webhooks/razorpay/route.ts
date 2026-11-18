@@ -3,6 +3,7 @@ import { getDb, schema } from "@/server/db";
 import { verifyWebhookSignature } from "@/server/payments";
 import { markPaid } from "@/server/orders";
 import { notifyOrderPaid } from "@/server/notify";
+import { autoBookShipment } from "@/server/delhivery";
 import { eq } from "drizzle-orm";
 
 /**
@@ -47,6 +48,7 @@ export async function POST(req: Request) {
       updateTag("stock");
       const items = await db.select().from(schema.orderItems).where(eq(schema.orderItems.orderId, order.id));
       await notifyOrderPaid(order, items);
+      await autoBookShipment(order, items);
     }
   }
 
