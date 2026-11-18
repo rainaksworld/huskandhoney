@@ -1,3 +1,15 @@
 huskandhoney.in, www.huskandhoney.in {
-	reverse_proxy app:3000
+	# Once Cloudflare is in front of this site, every request Caddy sees
+	# comes from Cloudflare's own servers, not the real visitor - so the
+	# app's per-visitor rate limiting (login attempts, checkout, etc.)
+	# would otherwise treat every visitor as the same "Cloudflare" IP.
+	# Cloudflare adds the real visitor's IP in this header; pass it
+	# through as the IP the app uses.
+	reverse_proxy app:3000 {
+		header_up X-Real-IP {http.request.header.CF-Connecting-IP}
+		header_up X-Forwarded-For {http.request.header.CF-Connecting-IP}
+	}
+
+	# Tell browsers to always use HTTPS for this domain from now on.
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
 }
