@@ -6,6 +6,7 @@ import { describeSku, parseSku, stockKey } from "@/lib/catalogue";
 import { getDb, schema } from "./db";
 import { getSettings, getStockMap, shippingFor } from "./store";
 import { activeProvider, createProviderOrder } from "./payments";
+import { evaluateCoupon } from "./coupons";
 
 export const CheckoutSchema = z.object({
   name: z.string().trim().min(2, "Enter your full name").max(80),
@@ -21,6 +22,7 @@ export const CheckoutSchema = z.object({
   pincode: z.string().trim().regex(/^[1-9]\d{5}$/, "Enter a 6-digit pincode"),
   note: z.string().trim().max(300).optional().default(""),
   whatsappOptIn: z.boolean().optional().default(false),
+  couponCode: z.string().trim().max(40).optional().default(""),
   items: z
     .array(z.object({ sku: z.string().max(80), qty: z.number().int().min(1).max(20) }))
     .min(1, "Your bag is empty")
@@ -126,6 +128,25 @@ export async function startCheckout(raw: unknown, userId: string | null = null):
     return { ok: false, error: "Some items in your bag changed. Please review it.", problems: quote.problems };
   }
 
+  // The coupon is checked again here, with the buyer's email, whatever the
+  // checkout page showed: the price is always worked out on the server.
+  let couponCode: string | null = null;
+  let discount = 0;
+  let shipping = quote.shipping;
+  if (input.couponCode) {
+    const c = await evaluateCoupon(input.couponCode, {
+      subtotal: quote.subtotal,
+      shipping: quote.shipping,
+      email: input.email,
+      userId,
+    });
+    if (!c.ok) return { ok: false, error: c.message, fieldErrors: { couponCode: c.message } };
+    couponCode = c.code;
+    discount = c.discount;
+    if (c.freeShipping) shipping = 0;
+  }
+  const total = quote.subtotal - discount + shipping;
+
   const db = await getDb();
   const accessToken = randomBytes(18).toString("base64url");
   const [order] = await db
@@ -143,8 +164,10 @@ export async function startCheckout(raw: unknown, userId: string | null = null):
       whatsappOptIn: input.whatsappOptIn,
       userId,
       subtotal: quote.subtotal * 100,
-      shipping: quote.shipping * 100,
-      total: quote.total * 100,
+      shipping: shipping * 100,
+      couponCode,
+      discount: discount * 100,
+      total: total * 100,
       provider,
     })
     .returning();
@@ -252,6 +275,12 @@ export async function markPaid(providerOrderId: string, providerPaymentId: strin
       })
       .where(eq(schema.orders.id, order.id))
       .returning();
+    if (order.couponCode) {
+      await tx
+        .update(schema.coupons)
+        .set({ used: sql`${schema.coupons.used} + 1` })
+        .where(eq(schema.coupons.code, order.couponCode));
+    }
     return { order: updated, firstTime: true };
   });
 }

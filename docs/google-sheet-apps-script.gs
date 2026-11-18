@@ -12,7 +12,7 @@ var SECRET = 'PASTE-THE-SAME-SECRET-AS-THE-SERVER-HERE';
 var TAB_NAME = 'Orders';
 var HEADERS = [
   'Order', 'Date', 'Name', 'Email', 'Phone', 'Address', 'City', 'State',
-  'Pincode', 'Items', 'Total (Rs)', 'WhatsApp opt-in', 'Note'
+  'Pincode', 'Items', 'Total (Rs)', 'Coupon', 'Discount (Rs)', 'WhatsApp opt-in', 'Note'
 ];
 
 function doPost(e) {
@@ -47,6 +47,8 @@ function doPost(e) {
       "'" + data.pincode,
       text(data.items),
       Number(data.total),
+      text(data.coupon),
+      Number(data.discount) || '',
       data.whatsapp,
       text(data.note)
     ]);

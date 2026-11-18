@@ -7,12 +7,14 @@ import { sendMail } from "@/server/email";
 import {
   getOrderByProviderId,
   markPaid,
+  quoteBag,
   startCheckout,
   type StartedCheckout,
 } from "@/server/orders";
 import { activeProvider, sandboxSign, verifyCheckoutSignature } from "@/server/payments";
 import { notifyOrderPaid } from "@/server/notify";
 import { getCurrentUser } from "@/server/accounts";
+import { evaluateCoupon } from "@/server/coupons";
 import { eq } from "drizzle-orm";
 import { updateTag } from "next/cache";
 import { getCoffee, getEquipment, getKit } from "@/lib/catalogue";
@@ -94,6 +96,33 @@ export async function beginCheckout(input: unknown): Promise<StartedCheckout> {
     return { ok: false, error: "Too many attempts. Please wait a few minutes." };
   const user = await getCurrentUser();
   return startCheckout(input, user?.id ?? null);
+}
+
+export type CouponCheck =
+  | { ok: true; code: string; discount: number; freeShipping: boolean; label: string }
+  | { ok: false; message: string };
+
+/** "Apply" on the checkout coupon box. The real check happens again at payment. */
+export async function checkCoupon(input: { code: string; email?: string; items: { sku: string; qty: number }[] }): Promise<CouponCheck> {
+  if (!(await allow("coupon", 30, 10 * 60_000)))
+    return { ok: false, message: "Too many tries. Please wait a few minutes." };
+  const p = z
+    .object({
+      code: z.string().max(40),
+      email: z.string().max(120).optional(),
+      items: z.array(z.object({ sku: z.string().max(80), qty: z.number().int().min(1).max(20) })).max(30),
+    })
+    .safeParse(input);
+  if (!p.success) return { ok: false, message: "We couldn't check that code. Please try again." };
+  const quote = await quoteBag(p.data.items);
+  const user = await getCurrentUser();
+  const email = z.string().email().safeParse(p.data.email?.trim().toLowerCase());
+  return evaluateCoupon(p.data.code, {
+    subtotal: quote.subtotal,
+    shipping: quote.shipping,
+    email: email.success ? email.data : undefined,
+    userId: user?.id ?? null,
+  });
 }
 
 export type ConfirmResult =

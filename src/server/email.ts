@@ -55,6 +55,8 @@ type OrderLike = {
   note: string | null;
   subtotal: number;
   shipping: number;
+  couponCode?: string | null;
+  discount?: number;
   total: number;
 };
 type ItemLike = { title: string; meta: string; unitPrice: number; qty: number };
@@ -67,6 +69,9 @@ function orderText(o: OrderLike, items: ItemLike[]) {
     ...lines,
     "",
     `Subtotal: ${formatINR(o.subtotal / 100)}`,
+    ...(o.discount
+      ? [`Discount (${o.couponCode}): −${formatINR(o.discount / 100)}`]
+      : []),
     `Shipping: ${o.shipping ? formatINR(o.shipping / 100) : "Free"}`,
     `Total paid: ${formatINR(o.total / 100)}`,
     "",
@@ -158,6 +163,20 @@ export async function sendPasswordResetEmail(u: AccountLike, resetToken: string)
       `${site}/reset-password?t=${resetToken}`,
       "The link works for 1 hour and only once.",
       "If this wasn't you, ignore this email - your password stays the same.",
+      "Husk & Honey, Siliguri",
+    ].join("\n\n"),
+    replyTo: process.env.OWNER_EMAIL,
+  });
+}
+
+export async function sendLoginCodeEmail(email: string, code: string) {
+  return sendMail({
+    to: email,
+    subject: `${code} is your Husk & Honey sign-in code`,
+    text: [
+      `Your sign-in code is: ${code}`,
+      "It works for 10 minutes and can be used once.",
+      "If you didn't ask for this, you can ignore this email - no one can sign in without it.",
       "Husk & Honey, Siliguri",
     ].join("\n\n"),
     replyTo: process.env.OWNER_EMAIL,

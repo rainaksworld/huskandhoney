@@ -89,6 +89,12 @@ export default async function OrderPage({
             <span>Subtotal</span>
             <span>{formatINR(order.subtotal / 100)}</span>
           </div>
+          {order.discount > 0 && (
+            <div className="row disc">
+              <span>Discount ({order.couponCode})</span>
+              <span>−{formatINR(order.discount / 100)}</span>
+            </div>
+          )}
           <div className="row">
             <span>Shipping</span>
             <span>{order.shipping === 0 ? "Free" : formatINR(order.shipping / 100)}</span>

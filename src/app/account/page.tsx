@@ -99,7 +99,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
 
       <div className="acct-sec">
         <h2 className="lab">Password</h2>
-        <ChangePasswordForm />
+        <ChangePasswordForm hasPassword={user.hasPassword} />
       </div>
     </section>
   );

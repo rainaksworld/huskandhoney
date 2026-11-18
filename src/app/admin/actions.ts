@@ -11,6 +11,7 @@ import { allStockKeys } from "@/lib/catalogue";
 import { SettingsSchema, saveSettings } from "@/server/store";
 import { setStock } from "@/server/store";
 import { notifyOrderStatus } from "@/server/notify";
+import { CouponFormSchema, createCoupon, setCouponActive } from "@/server/coupons";
 
 export type FormResult = { ok: boolean; message: string };
 
@@ -138,4 +139,43 @@ export async function updateSettings(_: FormResult | null, form: FormData): Prom
 
   await saveSettings(next.data);
   return { ok: true, message: "Settings saved." };
+}
+
+/* ------------------------------------------------------------------ */
+/* Coupons                                                              */
+/* ------------------------------------------------------------------ */
+
+export type CouponFormResult = FormResult & { fieldErrors?: Record<string, string> };
+
+export async function addCoupon(_: CouponFormResult | null, form: FormData): Promise<CouponFormResult> {
+  if (!(await isAdmin())) return { ok: false, message: "Session expired. Please log in again." };
+
+  const parsed = CouponFormSchema.safeParse({
+    code: form.get("code"),
+    kind: form.get("kind"),
+    value: form.get("value") ?? "",
+    freeShipping: form.get("freeShipping") === "on",
+    minOrder: form.get("minOrder") ?? "",
+    endsAt: form.get("endsAt") ?? "",
+    maxUses: form.get("maxUses") ?? "",
+    perCustomer: form.get("perCustomer") ?? "1",
+    firstOrderOnly: form.get("firstOrderOnly") === "on",
+  });
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string> = {};
+    for (const issue of parsed.error.issues) fieldErrors[String(issue.path[0] ?? "form")] ??= issue.message;
+    return { ok: false, message: "Please check the highlighted fields.", fieldErrors };
+  }
+
+  const row = await createCoupon(parsed.data);
+  if (!row) return { ok: false, message: "A coupon with that code already exists.", fieldErrors: { code: "Already used" } };
+  refresh();
+  return { ok: true, message: `Coupon ${row.code} created.` };
+}
+
+export async function toggleCoupon(id: number, active: boolean): Promise<FormResult> {
+  if (!(await isAdmin())) return { ok: false, message: "Session expired. Please log in again." };
+  await setCouponActive(id, active);
+  refresh();
+  return { ok: true, message: active ? "Coupon turned back on." : "Coupon turned off." };
 }

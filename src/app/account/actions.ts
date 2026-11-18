@@ -14,11 +14,13 @@ import {
   findUserByEmail,
   getCurrentUser,
   hashPassword,
+  requestLoginCode,
   safeNext,
   startSession,
+  verifyLoginCode,
   verifyPassword,
 } from "@/server/accounts";
-import { sendPasswordResetEmail, sendVerifyEmail, sendWelcomeEmail } from "@/server/email";
+import { sendLoginCodeEmail, sendPasswordResetEmail, sendVerifyEmail, sendWelcomeEmail } from "@/server/email";
 
 export type AccountFormResult = {
   ok: boolean;
@@ -219,18 +221,26 @@ export async function updateDetails(_: AccountFormResult | null, form: FormData)
 export async function changePassword(_: AccountFormResult | null, form: FormData): Promise<AccountFormResult> {
   const user = await getCurrentUser();
   if (!user) return { ok: false, message: "Please log in again." };
+  const row = await findUserByEmail(user.email);
+  if (!row) return { ok: false, message: "Please log in again." };
+  // An account made by an emailed code, Google or Facebook has no password
+  // yet - this sets one for the first time, so there's no "current" to check.
+  const hasPassword = row.passwordHash !== "";
+
   const parsed = z
-    .object({ current: z.string().min(1, "Enter your current password").max(200), password, confirm: z.string() })
+    .object({ current: z.string().max(200).optional().default(""), password, confirm: z.string() })
     .refine((v) => v.password === v.confirm, { message: "The two passwords don't match", path: ["confirm"] })
-    .safeParse({ current: form.get("current"), password: form.get("password"), confirm: form.get("confirm") });
+    .safeParse({ current: form.get("current") ?? "", password: form.get("password"), confirm: form.get("confirm") });
   if (!parsed.success)
     return { ok: false, message: "Please check the highlighted fields.", fieldErrors: errors(parsed.error.issues) };
   if (!(await allow("change-password", 8, 15 * 60_000)))
     return { ok: false, message: "Too many attempts. Please wait a few minutes." };
 
-  const row = await findUserByEmail(user.email);
-  if (!row || !(await verifyPassword(parsed.data.current, row.passwordHash)))
-    return { ok: false, message: "Your current password isn't right.", fieldErrors: { current: "Not right" } };
+  if (hasPassword) {
+    if (!parsed.data.current) return { ok: false, message: "Enter your current password.", fieldErrors: { current: "Required" } };
+    if (!(await verifyPassword(parsed.data.current, row.passwordHash)))
+      return { ok: false, message: "Your current password isn't right.", fieldErrors: { current: "Not right" } };
+  }
 
   const db = await getDb();
   await db
@@ -238,7 +248,12 @@ export async function changePassword(_: AccountFormResult | null, form: FormData
     .set({ passwordHash: await hashPassword(parsed.data.password), updatedAt: sql`now()` })
     .where(eq(schema.users.id, user.id));
   await endOtherSessions(user.id, true); // other devices are signed out, this one stays in
-  return { ok: true, message: "Password changed. Any other devices you were logged in on have been signed out." };
+  return {
+    ok: true,
+    message: hasPassword
+      ? "Password changed. Any other devices you were logged in on have been signed out."
+      : "Password set. You can now log in with your email and this password too.",
+  };
 }
 
 /* ------------------------------------------------------------------ */
@@ -251,4 +266,39 @@ export async function getCheckoutPrefill() {
   if (!user) return null;
   const { name, email, phone, address, city, state, pincode, whatsappOptIn } = user;
   return { name, email, phone, address, city, state, pincode, whatsappOptIn };
+}
+
+/* ------------------------------------------------------------------ */
+/* Email sign-in code ("email me a code")                              */
+/* ------------------------------------------------------------------ */
+
+export type EmailCodeResult = AccountFormResult & { sent?: boolean };
+
+/** Step 1 of the code tab: emails a fresh 6-digit code. */
+export async function requestEmailCode(_: EmailCodeResult | null, form: FormData): Promise<EmailCodeResult> {
+  const parsed = email.safeParse(form.get("email"));
+  if (!parsed.success) return { ok: false, message: "Enter a valid email address.", fieldErrors: { email: "Not a valid email" } };
+  if (!(await allow("login-code-request", 6, 15 * 60_000)))
+    return { ok: false, message: "Too many attempts. Please wait a few minutes." };
+
+  const code = await requestLoginCode(parsed.data);
+  await sendLoginCodeEmail(parsed.data, code);
+  return { ok: true, message: `We've emailed a code to ${parsed.data}.`, sent: true };
+}
+
+/** Step 2: checks the code, signs in (making the account if it's new), and redirects. */
+export async function submitEmailCode(_: AccountFormResult | null, form: FormData): Promise<AccountFormResult> {
+  const parsed = z
+    .object({ email, code: z.string().trim().regex(/^\d{6}$/, "Enter the 6-digit code") })
+    .safeParse({ email: form.get("email"), code: form.get("code") });
+  if (!parsed.success)
+    return { ok: false, message: "Please check the highlighted fields.", fieldErrors: errors(parsed.error.issues) };
+  if (!(await allow("login-code-verify", 10, 15 * 60_000)))
+    return { ok: false, message: "Too many attempts. Please wait a few minutes." };
+
+  const result = await verifyLoginCode(parsed.data.email, parsed.data.code);
+  if (!result.ok) return { ok: false, message: result.message, fieldErrors: { code: result.message } };
+
+  await startSession(result.userId);
+  redirect(safeNext(form.get("next")));
 }

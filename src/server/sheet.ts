@@ -18,6 +18,8 @@ type OrderLike = {
   pincode: string;
   note: string | null;
   total: number;
+  couponCode?: string | null;
+  discount?: number;
   whatsappOptIn: boolean;
   paidAt: Date | string | null;
   createdAt: Date | string;
@@ -49,6 +51,8 @@ export async function appendOrderToSheet(o: OrderLike, items: ItemLike[]) {
         pincode: o.pincode,
         items: items.map((i) => `${i.qty} × ${i.title} (${i.meta})`).join("\n"),
         total: o.total / 100,
+        coupon: o.couponCode ?? "",
+        discount: o.discount ? o.discount / 100 : 0,
         whatsapp: o.whatsappOptIn ? "Yes" : "No",
         note: o.note ?? "",
       }),

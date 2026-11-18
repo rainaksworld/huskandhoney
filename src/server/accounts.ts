@@ -98,6 +98,8 @@ export type Account = {
   pincode: string;
   emailVerified: boolean;
   whatsappOptIn: boolean;
+  /** False for an account made by an emailed code, Google or Facebook that never set one. */
+  hasPassword: boolean;
   createdAt: Date;
 };
 
@@ -119,14 +121,15 @@ export async function getCurrentUser(): Promise<Account | null> {
       pincode: u.pincode,
       emailVerifiedAt: u.emailVerifiedAt,
       whatsappOptIn: u.whatsappOptIn,
+      passwordHash: u.passwordHash,
       createdAt: u.createdAt,
     })
     .from(schema.sessions)
     .innerJoin(u, eq(u.id, schema.sessions.userId))
     .where(and(eq(schema.sessions.id, id), gt(schema.sessions.expiresAt, sql`now()`)));
   if (!row) return null;
-  const { emailVerifiedAt, ...rest } = row;
-  return { ...rest, emailVerified: Boolean(emailVerifiedAt) };
+  const { emailVerifiedAt, passwordHash, ...rest } = row;
+  return { ...rest, emailVerified: Boolean(emailVerifiedAt), hasPassword: passwordHash !== "" };
 }
 
 /** For account pages: the user, or off to the login page (and back here after). */
@@ -216,4 +219,125 @@ export async function ordersForUser(user: Account) {
     .from(o)
     .where(and(mine, sql`${o.paidAt} is not null`))
     .orderBy(desc(o.createdAt));
+}
+
+/* ------------------------------------------------------------------ */
+/* Email sign-in codes (no password needed)                            */
+/* ------------------------------------------------------------------ */
+
+const CODE_TTL_MS = 10 * 60_000;
+const CODE_MAX_ATTEMPTS = 6;
+
+/** Six random digits, as a string so a leading zero is kept. */
+function randomCode() {
+  return String(randomBytes(4).readUInt32BE() % 1_000_000).padStart(6, "0");
+}
+
+/** Creates and emails a fresh sign-in code, replacing any earlier unused one. */
+export async function requestLoginCode(email: string) {
+  const db = await getDb();
+  const clean = email.trim().toLowerCase();
+  await db.update(schema.loginCodes).set({ usedAt: sql`now()` }).where(and(eq(schema.loginCodes.email, clean), isNull(schema.loginCodes.usedAt)));
+  const code = randomCode();
+  await db.insert(schema.loginCodes).values({
+    email: clean,
+    codeHash: sha256(code),
+    expiresAt: new Date(Date.now() + CODE_TTL_MS),
+  });
+  return code;
+}
+
+export type LoginCodeResult = { ok: true; userId: string; isNewUser: boolean } | { ok: false; message: string };
+
+/**
+ * Checks a code and, if it's right, signs the visitor in - creating the
+ * account on the spot if this is the first time this email has been seen.
+ * An account made this way starts with no password (passwordHash "") and
+ * a confirmed email, since receiving the code proves the address.
+ */
+export async function verifyLoginCode(email: string, codeInput: string): Promise<LoginCodeResult> {
+  const db = await getDb();
+  const clean = email.trim().toLowerCase();
+  const c = schema.loginCodes;
+  const [row] = await db
+    .select()
+    .from(c)
+    .where(and(eq(c.email, clean), isNull(c.usedAt), gt(c.expiresAt, sql`now()`)))
+    .orderBy(desc(c.createdAt))
+    .limit(1);
+  if (!row) return { ok: false, message: "That code has expired. Request a new one." };
+  if (row.attempts >= CODE_MAX_ATTEMPTS) {
+    await db.update(c).set({ usedAt: sql`now()` }).where(eq(c.id, row.id));
+    return { ok: false, message: "Too many wrong tries. Request a new code." };
+  }
+  if (sha256(codeInput.trim()) !== row.codeHash) {
+    await db.update(c).set({ attempts: row.attempts + 1 }).where(eq(c.id, row.id));
+    return { ok: false, message: "That code isn't right. Please check and try again." };
+  }
+  await db.update(c).set({ usedAt: sql`now()` }).where(eq(c.id, row.id));
+
+  const existing = await findUserByEmail(clean);
+  if (existing) {
+    if (!existing.emailVerifiedAt) await db.update(schema.users).set({ emailVerifiedAt: sql`now()` }).where(eq(schema.users.id, existing.id));
+    return { ok: true, userId: existing.id, isNewUser: false };
+  }
+  const [user] = await db
+    .insert(schema.users)
+    .values({ email: clean, name: "", passwordHash: "", emailVerifiedAt: sql`now()` })
+    .onConflictDoNothing()
+    .returning();
+  if (user) return { ok: true, userId: user.id, isNewUser: true };
+  // Someone else's request created the account a moment ago - just sign in.
+  const row2 = await findUserByEmail(clean);
+  if (row2) return { ok: true, userId: row2.id, isNewUser: false };
+  return { ok: false, message: "Something went wrong. Please try again." };
+}
+
+/* ------------------------------------------------------------------ */
+/* Google / Facebook sign-in - find or create by email, link by provider id */
+/* ------------------------------------------------------------------ */
+
+/**
+ * One account per email: if this Google/Facebook id is already linked, use
+ * that account; otherwise find or create by email and attach the id. This
+ * is how a customer who signed up with a password, then later taps
+ * "Continue with Google" using the same address, ends up as one account.
+ */
+export async function findOrCreateSocialUser(
+  provider: "google" | "facebook",
+  providerId: string,
+  email: string,
+  name?: string,
+) {
+  const db = await getDb();
+  const clean = email.trim().toLowerCase();
+  const col = provider === "google" ? schema.users.googleId : schema.users.facebookId;
+
+  const [byProvider] = await db.select().from(schema.users).where(eq(col, providerId));
+  if (byProvider) return byProvider;
+
+  const byEmail = await findUserByEmail(clean);
+  if (byEmail) {
+    const [updated] = await db
+      .update(schema.users)
+      .set({ [provider === "google" ? "googleId" : "facebookId"]: providerId, emailVerifiedAt: byEmail.emailVerifiedAt ?? sql`now()`, updatedAt: sql`now()` })
+      .where(eq(schema.users.id, byEmail.id))
+      .returning();
+    return updated;
+  }
+
+  const [created] = await db
+    .insert(schema.users)
+    .values({
+      email: clean,
+      name: name ?? "",
+      passwordHash: "",
+      emailVerifiedAt: sql`now()`,
+      [provider === "google" ? "googleId" : "facebookId"]: providerId,
+    })
+    .onConflictDoNothing()
+    .returning();
+  if (created) return created;
+  // A parallel request (or a plain email sign-up) won the race - try again.
+  return (await findUserByEmail(clean)) ?? byEmail;
 }

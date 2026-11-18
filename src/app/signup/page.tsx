@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { getCurrentUser, safeNext } from "@/server/accounts";
-import { SignUpForm } from "@/components/account/AccountForms";
+import { facebookEnabled, googleEnabled } from "@/server/oauth";
+import { SignUpForm, SocialButtons } from "@/components/account/AccountForms";
 
 export const metadata: Metadata = { title: "Create an account", robots: { index: false, follow: true } };
 
@@ -21,7 +22,10 @@ export default async function SignUpPage({ searchParams }: { searchParams: Promi
         </h1>
         <p className="lead">Save your delivery details, see your orders, and check out faster next time.</p>
       </div>
-      <SignUpForm next={next} />
+      <div className="auth-wrap">
+        <SocialButtons next={next} google={googleEnabled()} facebook={facebookEnabled()} />
+        <SignUpForm next={next} />
+      </div>
     </section>
   );
 }

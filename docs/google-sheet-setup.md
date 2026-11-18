@@ -28,3 +28,8 @@ the secret, so only this server can add rows.
 
 If you later edit the script, use **Deploy -> Manage deployments -> Edit ->
 New version** so the URL stays the same.
+
+If you set this up before coupons existed: re-paste the updated
+`docs/google-sheet-apps-script.gs` (same two steps above) to add the
+"Coupon" and "Discount (Rs)" columns to new rows. Existing rows aren't
+changed.

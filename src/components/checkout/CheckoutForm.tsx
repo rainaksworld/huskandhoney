@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { getCheckoutPrefill } from "@/app/account/actions";
 import { useCart } from "@/components/cart/CartProvider";
 import { formatINR } from "@/lib/catalogue";
-import { beginCheckout, confirmPayment, sandboxPay } from "@/app/actions";
+import { beginCheckout, checkCoupon, confirmPayment, sandboxPay } from "@/app/actions";
 import type { CheckoutInput } from "@/server/orders";
 
 declare global {
@@ -86,10 +86,56 @@ export function CheckoutForm() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
+  // Coupon: checked on the server when applied, and again when paying.
+  const [couponInput, setCouponInput] = useState("");
+  const [coupon, setCoupon] = useState<{ code: string; discount: number; freeShipping: boolean; label: string } | null>(
+    null,
+  );
+  const [couponMsg, setCouponMsg] = useState("");
+  const [couponBusy, setCouponBusy] = useState(false);
+  const bagKey = lines.map((l) => `${l.sku}:${l.qty}`).join(",");
+
+  async function applyCoupon(code: string, quiet = false) {
+    if (!code.trim()) {
+      setCouponMsg("Type a coupon code first.");
+      return;
+    }
+    setCouponBusy(true);
+    try {
+      const r = await checkCoupon({
+        code,
+        email: values.email,
+        items: lines.map((l) => ({ sku: l.sku, qty: l.qty })),
+      });
+      if (r.ok) {
+        setCoupon({ code: r.code, discount: r.discount, freeShipping: r.freeShipping, label: r.label });
+        setCouponMsg("");
+        setCouponInput("");
+      } else {
+        setCoupon(null);
+        setCouponInput(code);
+        setCouponMsg(r.message);
+      }
+    } catch {
+      if (!quiet) setCouponMsg("We couldn't check that code. Please try again.");
+    } finally {
+      setCouponBusy(false);
+    }
+  }
+
+  // If the bag changes after a code is applied, work the saving out again.
+  useEffect(() => {
+    if (!coupon) return;
+    const code = coupon.code;
+    queueMicrotask(() => void applyCoupon(code, true));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bagKey]);
+
   const freeOver = shop?.freeShippingOver ?? null;
   const fee = shop?.shippingFee ?? 0;
-  const shipping = freeOver !== null && subtotal >= freeOver ? 0 : fee;
-  const total = subtotal + shipping;
+  const discount = coupon ? Math.min(coupon.discount, subtotal) : 0;
+  const shipping = coupon?.freeShipping || (freeOver !== null && subtotal >= freeOver) ? 0 : fee;
+  const total = subtotal - discount + shipping;
 
   const set = (name: string, v: string) => setValues((s) => ({ ...s, [name]: v }));
 
@@ -103,10 +149,17 @@ export function CheckoutForm() {
     const started = await beginCheckout({
       ...values,
       whatsappOptIn,
+      couponCode: coupon?.code ?? "",
       items: lines.map((l) => ({ sku: l.sku, qty: l.qty })),
     });
 
     if (!started.ok) {
+      if (started.fieldErrors?.couponCode) {
+        // e.g. a first-order code, now that we know the email
+        setCouponInput(coupon?.code ?? "");
+        setCoupon(null);
+        setCouponMsg(started.fieldErrors.couponCode);
+      }
       setError(started.error);
       setFieldErrors(started.fieldErrors ?? {});
       setBusy(false);
@@ -260,10 +313,68 @@ export function CheckoutForm() {
               </li>
             ))}
           </ul>
+          <div className="coupon">
+            <p className="coupon-q">Have a coupon?</p>
+            {coupon ? (
+              <div className="coupon-on" role="status">
+                <span>
+                  <b>{coupon.code}</b> · {coupon.label}
+                </span>
+                <button
+                  type="button"
+                  className="coupon-x"
+                  onClick={() => {
+                    setCoupon(null);
+                    setCouponMsg("");
+                  }}
+                >
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <form
+                className="coupon-row"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void applyCoupon(couponInput);
+                }}
+              >
+                <input
+                  aria-label="Coupon code"
+                  placeholder="Coupon code"
+                  value={couponInput}
+                  onChange={(e) => {
+                    setCouponInput(e.target.value.toUpperCase());
+                    setCouponMsg("");
+                  }}
+                  autoCapitalize="characters"
+                  autoComplete="off"
+                  spellCheck={false}
+                  maxLength={30}
+                  aria-invalid={Boolean(couponMsg)}
+                  aria-describedby={couponMsg ? "coupon-msg" : undefined}
+                />
+                <button type="submit" className="btn btn-ghost" disabled={couponBusy}>
+                  {couponBusy ? "Checking…" : "Apply"}
+                </button>
+              </form>
+            )}
+            {couponMsg && (
+              <p className="field-err" id="coupon-msg" role="alert">
+                {couponMsg}
+              </p>
+            )}
+          </div>
           <div className="row">
             <span>Subtotal</span>
             <span>{formatINR(subtotal)}</span>
           </div>
+          {coupon && discount > 0 && (
+            <div className="row disc">
+              <span>Discount ({coupon.code})</span>
+              <span>−{formatINR(discount)}</span>
+            </div>
+          )}
           <div className="row">
             <span>Shipping</span>
             <span>{shipping === 0 ? "Free" : formatINR(shipping)}</span>

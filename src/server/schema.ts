@@ -39,15 +39,61 @@ export const users = pgTable(
     city: text("city").notNull().default(""),
     state: text("state").notNull().default(""),
     pincode: text("pincode").notNull().default(""),
-    /** scrypt$<salt>$<hash>, see src/server/accounts.ts */
+    /** scrypt$<salt>$<hash>, see src/server/accounts.ts. Empty for people who
+     * only sign in with an emailed code, Google or Facebook. */
     passwordHash: text("password_hash").notNull(),
+    /** Linked sign-in accounts (provider user ids). */
+    googleId: text("google_id"),
+    facebookId: text("facebook_id"),
     emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
     whatsappOptIn: boolean("whatsapp_opt_in").notNull().default(true),
     lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("users_email").on(t.email)],
+  (t) => [
+    uniqueIndex("users_email").on(t.email),
+    uniqueIndex("users_google_id").on(t.googleId),
+    uniqueIndex("users_facebook_id").on(t.facebookId),
+  ],
+);
+
+/** Six-digit sign-in codes sent by email. Only a keyed hash of the code is kept. */
+export const loginCodes = pgTable("login_codes", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull(),
+  codeHash: text("code_hash").notNull(),
+  attempts: integer("attempts").notNull().default(0),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  usedAt: timestamp("used_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * Discount coupons. kind: "percent" (value = % off the coffee), "flat"
+ * (value = rupees off) or "none" (no money off; use with freeShipping).
+ */
+export const coupons = pgTable(
+  "coupons",
+  {
+    id: serial("id").primaryKey(),
+    code: text("code").notNull(),
+    kind: text("kind").$type<"percent" | "flat" | "none">().notNull(),
+    value: integer("value").notNull().default(0),
+    freeShipping: boolean("free_shipping").notNull().default(false),
+    /** Rupees; 0 = no minimum. */
+    minOrder: integer("min_order").notNull().default(0),
+    endsAt: timestamp("ends_at", { withTimezone: true }),
+    /** Total paid orders allowed; null = unlimited. */
+    maxUses: integer("max_uses"),
+    /** Paid orders allowed per customer email; null = unlimited. */
+    perCustomer: integer("per_customer").default(1),
+    firstOrderOnly: boolean("first_order_only").notNull().default(false),
+    active: boolean("active").notNull().default(true),
+    used: integer("used").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("coupons_code").on(t.code)],
 );
 
 /** Logged-in sessions. Only a hash of the cookie token is stored. */
@@ -102,6 +148,9 @@ export const orders = pgTable(
     /** All money in paise. */
     subtotal: integer("subtotal").notNull(),
     shipping: integer("shipping").notNull(),
+    /** Coupon used, and how much it took off (paise). */
+    couponCode: text("coupon_code"),
+    discount: integer("discount").notNull().default(0),
     total: integer("total").notNull(),
     currency: text("currency").notNull().default("INR"),
     provider: text("provider").notNull(),
